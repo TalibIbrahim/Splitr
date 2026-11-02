@@ -48,4 +48,5 @@ export function useSplitr<T>(selector: (state: SplitrState) => T): T {
 }
 
 export * from './selectors';
+export { exportData, parseBackup, mergeRoots, type BackupEnvelope, type ParseBackupResult, type RestoreMode } from './backup';
 export type { SplitrState, RemovedItem, ApplyDraftOptions } from './create-store';

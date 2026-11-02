@@ -16,7 +16,9 @@ import {
   type BillPatch,
   toggleParticipant,
 } from '@splitr/bill-domain';
-import type { Bill, BillParticipant, Group, PersistedRoot, Person, ReceiptDraft } from '@splitr/shared-types';
+import type { Bill, BillParticipant, CardOffer, Group, PersistedRoot, Person, ReceiptDraft } from '@splitr/shared-types';
+import { mergeRoots, type RestoreMode } from './backup';
+import { selectSettleUpPlan } from './selectors';
 import { createSaver, emptyRoot, loadRoot, type LoadOutcome, type Saver } from './persist';
 
 export interface SplitrDeps {
@@ -111,6 +113,17 @@ export interface SplitrActions {
   setTransferPaid(id: string, from: string, to: string, paid: boolean): void;
   settle(id: string): SettleResult;
   reopen(id: string): void;
+  /** E2. Marks every pending transfer between me and the counterparty paid, across all open bills. */
+  markSettledWith(key: string): { billsTouched: number };
+  /** E6. Replaces or merges the local root with an imported one, then re-runs the transfer-status invariant. */
+  restoreBackup(root: PersistedRoot, mode: RestoreMode): void;
+  setLastBackupAt(iso: string): void;
+  /** Phase 5. Trims; empty is ignored (returns ''); a case-insensitive duplicate returns the existing id. */
+  addCardLabel(label: string): string;
+  removeCardLabel(id: string): void;
+  /** Id is 'user-' + newId(); the source is forced to { kind: 'user', addedOn: today }. */
+  addUserOffer(offer: Omit<CardOffer, 'id' | 'source'> & { note?: string }): string;
+  removeUserOffer(id: string): void;
   /** Sets `bill.receipt = { imageUri, scannedAt: now(), draft }`. */
   attachReceipt(billId: string, r: { imageUri: string; draft: ReceiptDraft | null }): void;
   /** Applies a draft patch (from `draftToBillPatch`) to an open bill; see docs/phase2-spec.md 6.1. */
@@ -546,6 +559,67 @@ export function createSplitrStore(deps: SplitrDeps): SplitrStore {
         const bill = get().root.bills.find((b) => b.id === id);
         if (!bill || bill.status !== 'settled' || !isLive(bill)) return;
         commit(id, withReconciledTransfers({ ...reopenBill(bill), updatedAt: now() }));
+      },
+
+      markSettledWith(key) {
+        const entry = selectSettleUpPlan()(get()).find((e) => e.key === key);
+        if (!entry) return { billsTouched: 0 };
+        const t = now();
+        const byBill = new Map<string, { from: string; to: string }[]>();
+        for (const tr of entry.sources) byBill.set(tr.billId, [...(byBill.get(tr.billId) ?? []), tr]);
+        let billsTouched = 0;
+        for (const [billId, transfers] of byBill) {
+          const before = findOpenBill(billId);
+          if (!before) continue;
+          mutateBill(billId, (b) => ({
+            ...b,
+            transferStatuses: b.transferStatuses.map((s) =>
+              s.status === 'pending' && transfers.some((x) => x.from === s.from && x.to === s.to)
+                ? { ...s, status: 'paid', paidAt: t }
+                : s,
+            ),
+          }));
+          billsTouched += 1;
+        }
+        return { billsTouched };
+      },
+
+      restoreBackup(incoming, mode) {
+        set((s) => {
+          const base = mode === 'replace' ? incoming : mergeRoots(s.root, incoming);
+          const bills = base.bills.map((b) => withReconciledTransfers(b).bill);
+          return { root: { ...base, bills } };
+        });
+      },
+
+      addCardLabel(label) {
+        const n = nonEmpty(label);
+        if (!n) return '';
+        const existing = (get().root.cards ?? []).find((c) => c.label.toLowerCase() === n.toLowerCase());
+        if (existing) return existing.id;
+        const id = newId();
+        setRoot((r) => ({ ...r, cards: [...(r.cards ?? []), { id, label: n }] }));
+        return id;
+      },
+
+      removeCardLabel(id) {
+        setRoot((r) => ({ ...r, cards: (r.cards ?? []).filter((c) => c.id !== id) }));
+      },
+
+      addUserOffer({ note, ...rest }) {
+        const id = `user-${newId()}`;
+        const source: CardOffer['source'] = { kind: 'user', addedOn: now().slice(0, 10), ...(note ? { note } : {}) };
+        const offer = { ...rest, id, source } as CardOffer;
+        setRoot((r) => ({ ...r, userOffers: [...(r.userOffers ?? []), offer] }));
+        return id;
+      },
+
+      removeUserOffer(id) {
+        setRoot((r) => ({ ...r, userOffers: (r.userOffers ?? []).filter((o) => o.id !== id) }));
+      },
+
+      setLastBackupAt(iso) {
+        setRoot((r) => ({ ...r, meta: { ...r.meta, lastBackupAt: iso } }));
       },
 
       attachReceipt(billId, r) {

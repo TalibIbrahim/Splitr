@@ -1,0 +1,913 @@
+[
+  {
+    "id": "bank-al-habib-kababjees-restaurant-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Kababjees Restaurant",
+    "city": "Lahore",
+    "branches": [
+      "Plot 4 near Nawaz Sharif Interchange, Ring Road Service Lane, Bedian Road, Askari 11"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 2000
+    },
+    "capPaisa": 200000,
+    "validTo": "2027-03-31",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap per transaction",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/kababjees_restaurant_signature",
+      "title": "Bank AL Habib - Kababjees Restaurant",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-monal-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Monal",
+    "city": "Lahore",
+    "branches": [
+      "Plaza Liberty Park & Ride Plaza, Liberty Chowk, Gulberg II"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-02-28",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap PKR 3,000 per card daily",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/monal_restaurant_signature",
+      "title": "Bank AL Habib - Monal",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-sumo-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Sumo",
+    "city": "Lahore",
+    "branches": [
+      "23-Z Block Phase 3 DHA",
+      "57-L Gulberg 2"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-02-28",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap per card per transaction per day",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/sumo_signature",
+      "title": "Bank AL Habib - Sumo",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-mandarin-kitchen-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Mandarin Kitchen",
+    "city": "Lahore",
+    "branches": [
+      "23-Z Block Phase 3 DHA",
+      "57-L Gulberg 2"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-02-28",
+    "terms": "Cap PKR 3,000 per transaction per card per day; other terms not stated on fetched text",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/mandarin_kitchen_signature",
+      "title": "Bank AL Habib - Mandarin Kitchen",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-pf-changs-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "PF Changs",
+    "city": "Lahore",
+    "branches": [
+      "17 C1 MM Alam Road, Gulberg"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-03-30",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap per card per transaction per day",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/pf_changs_signature",
+      "title": "Bank AL Habib - PF Changs",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-cafe-aylanto-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Cafe Aylanto",
+    "city": "Lahore",
+    "branches": [
+      "12/C-1 MM Alam Road, Gulberg III",
+      "Plaza 99 Fairways Commercial, DHA Phase 6"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 5000
+    },
+    "capPaisa": 700000,
+    "validTo": "2027-06-30",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap per card per transaction per day",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/cafe_aylanto_signature",
+      "title": "Bank AL Habib - Cafe Aylanto",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-yum-chinese-thai-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Yum - Chinese & Thai",
+    "city": "Lahore",
+    "branches": [
+      "24K Gulberg II",
+      "72 Z Phase III DHA"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 2000
+    },
+    "capPaisa": 200000,
+    "validTo": "2027-02-28",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/yum_chinese_and_thai_signature",
+      "title": "Bank AL Habib - Yum - Chinese & Thai",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-the-carnivore-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "The Carnivore",
+    "city": "Lahore",
+    "branches": [
+      "Opposite Xinwa Mall, Mehmood Ali Kasuri Road, Gulberg III"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-03-31",
+    "terms": "POS only; one transaction per card per day; not applicable to GST/government taxes; not combinable",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/the_carnivore_signature",
+      "title": "Bank AL Habib - The Carnivore",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-sakura-signature",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Signature"
+    ],
+    "restaurant": "Sakura",
+    "city": "Lahore",
+    "branches": [
+      "Pearl-Continental Lahore"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 4000
+    },
+    "capPaisa": 400000,
+    "validTo": "2027-05-31",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/signature-discount/sakura_signature",
+      "title": "Bank AL Habib - Sakura",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-sakura-platinum-credit",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Platinum Credit"
+    ],
+    "restaurant": "Sakura",
+    "city": "Lahore",
+    "branches": [
+      "Pearl-Continental Lahore"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 3000
+    },
+    "capPaisa": 300000,
+    "validTo": "2027-05-31",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/platinum-credit-discount/sakura_platinum_creditcard",
+      "title": "Bank AL Habib - Sakura",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-bar-bq-tonight-platinum-credit",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Platinum Credit"
+    ],
+    "restaurant": "Bar BQ Tonight",
+    "city": "Lahore",
+    "branches": [
+      "7A/3 Mehmood Ali Kasuri Road",
+      "Z-27 Commercial Area DHA Phase III"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "capPaisa": 150000,
+    "validTo": "2027-05-31",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions; cap per card daily",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/platinum-credit-discount/bar_bq_tonight_platinum_creditcard",
+      "title": "Bank AL Habib - Bar BQ Tonight",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-pf-changs-platinum-credit",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Platinum Credit"
+    ],
+    "restaurant": "PF Changs",
+    "city": "Lahore",
+    "branches": [
+      "17 C1 MM Alam Road, Gulberg"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 2000
+    },
+    "capPaisa": 200000,
+    "validTo": "2027-05-31",
+    "terms": "POS transactions only; max 4 transactions per calendar month; cannot be combined with other promotions",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/platinum-credit-discount/pf_changs_platinum_creditcard",
+      "title": "Bank AL Habib - PF Changs",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "bank-al-habib-nandos-platinum-debit",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "Bank AL Habib Platinum Debit"
+    ],
+    "restaurant": "Nando's",
+    "city": "Lahore",
+    "branches": [
+      "Gulberg III (Mehmood Ali Kasuri Rd)",
+      "DHA Z Block Commercial",
+      "Emporium Mall Johar Town",
+      "DHA Phase 6 J Block",
+      "Johar Town J-3"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 2500
+    },
+    "capPaisa": 250000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "validTo": "2026-12-31",
+    "terms": "POS only; one transaction per card per day; not applicable to GST; not combinable with promotions/vouchers; no group discounts/special events",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/discounts-platinum/nandos",
+      "title": "Bank AL Habib - Nando's",
+      "retrievedOn": "2026-11-02",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "bank-al-habib-kababjees-restaurant-all-bank-al-habib-debit-credit-cards",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "All Bank AL Habib Debit & Credit Cards"
+    ],
+    "restaurant": "Kababjees Restaurant",
+    "city": "Lahore",
+    "branches": [
+      "Askari 11"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 5000
+    },
+    "capPaisa": 500000,
+    "validFrom": "2026-11-01",
+    "validTo": "2026-11-10",
+    "terms": "Campaign 1-10 Nov 2026; cap PKR 5,000 per transaction; max 4 discounted transactions per merchant per card; POS only; excl. GST; not combinable with other promotions/group discounts",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/posts/a-november-to-remember",
+      "title": "Bank AL Habib - A November to Remember",
+      "retrievedOn": "2026-11-02",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "bank-al-habib-monal-all-bank-al-habib-debit-credit-cards",
+    "bank": "Bank AL Habib",
+    "cardProducts": [
+      "All Bank AL Habib Debit & Credit Cards"
+    ],
+    "restaurant": "Monal",
+    "city": "Lahore",
+    "branches": [
+      "Gulberg II Liberty"
+    ],
+    "discount": {
+      "type": "percent",
+      "bp": 5000
+    },
+    "capPaisa": 500000,
+    "validFrom": "2026-11-01",
+    "validTo": "2026-11-10",
+    "terms": "Campaign 1-10 Nov 2026; cap PKR 5,000 per transaction; max 4 discounted transactions per merchant per card; POS only; excl. GST; not combinable with other promotions/group discounts",
+    "source": {
+      "kind": "published",
+      "url": "https://www.bankalhabib.com/posts/a-november-to-remember",
+      "title": "Bank AL Habib - A November to Remember",
+      "retrievedOn": "2026-11-02",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "hbl-bistro-201-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Bistro 201",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-china-town-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "China Town",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-coffee-tea-company-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Coffee, Tea & Company",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-cross-stitch-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Cross Stitch",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-damas-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Damas",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 2500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-dellish-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Dellish",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-essentia-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Essentia",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-forest-cafe-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Forest Cafe",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-hardees-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Hardee's",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-khiva-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Khiva",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-la-farine-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "La Farine",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-mei-kong-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Mei Kong",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-mouthful-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Mouthful",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-new-york-coffee-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "New York Coffee",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-new-yorker-pizza-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "New Yorker Pizza",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-options-3-locations-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Options (3 locations)",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-pataka-boti-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Pataka Boti",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-pizza-max-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Pizza Max",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 2000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-salt-n-pepper-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Salt n Pepper",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-sultan-basha-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Sultan Basha",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-the-brasserie-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "The Brasserie",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-the-cakery-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "The Cakery",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-the-rice-bowl-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "The Rice Bowl",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1000
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  },
+  {
+    "id": "hbl-wasabi-konnect-debit-card",
+    "bank": "HBL",
+    "cardProducts": [
+      "HBL Konnect Debit Card"
+    ],
+    "restaurant": "Wasabi",
+    "city": "Lahore",
+    "discount": {
+      "type": "percent",
+      "bp": 1500
+    },
+    "terms": "Page lists no validity, cap or exclusions; states HBL may withdraw/change any offer without notice",
+    "source": {
+      "kind": "published",
+      "url": "https://www.hbl.com/personal/konnect/konnect-account/konnect-debit-card-package",
+      "title": "HBL Konnect Debit Card Package",
+      "retrievedOn": "2026-11-02",
+      "confidence": "medium"
+    }
+  }
+]

@@ -11,6 +11,7 @@ import {
   PaisaSchema,
 } from './engine';
 import { ReceiptDraftSchema } from './receipt';
+import { CardOfferSchema } from './offers';
 
 /** ISO-8601 UTC timestamp. */
 const TimestampSchema = z.iso.datetime();
@@ -99,5 +100,10 @@ export const PersistedRootSchema = z.object({
   people: arr(PersonSchema),
   groups: arr(GroupSchema),
   bills: arr(BillSchema),
+  /** Phase 4: optional so data written by earlier versions still validates. */
+  meta: z.object({ lastBackupAt: TimestampSchema.optional() }).optional(),
+  /** Phase 5: card labels only (never numbers) and user-added offers. Optional for older data. */
+  cards: z.array(z.object({ id: IdSchema, label: z.string().min(1) })).optional(),
+  userOffers: z.array(CardOfferSchema).optional(),
 });
 export type PersistedRoot = z.infer<typeof PersistedRootSchema>;

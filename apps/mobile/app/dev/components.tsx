@@ -34,6 +34,7 @@ import {
   type BillStep,
   type ExplainLineView,
 } from '../../components/bill';
+import { ShareCard } from '../../components/share/ShareCard';
 
 const p = (n: number) => n as Paisa;
 
@@ -51,6 +52,28 @@ const FIXTURE_B = [
   { id: 'al', name: 'Ali', subtotal: p(225300) },
   { id: 's', name: 'Saad', subtotal: p(180600) },
 ];
+
+const SHARE_MODEL = {
+  restaurant: 'Savour Foods',
+  dateLabel: '12 Oct',
+  total: p(850000),
+  rows: [
+    { id: 'm', name: 'Mahhee', amount: p(180600), isMe: true, paid: false },
+    { id: 'h', name: 'Hamza', amount: p(263500), isMe: false, paid: true },
+    { id: 'al', name: 'Ali', amount: p(225300), isMe: false, paid: false },
+    { id: 's', name: 'Saad', amount: p(180600), isMe: false, paid: false },
+  ],
+  payBlocks: [
+    {
+      to: 'Hamza',
+      lines: [
+        { from: 'Mahhee', amount: p(180600), paid: false },
+        { from: 'Ali', amount: p(225300), paid: true },
+        { from: 'Saad', amount: p(180600), paid: false },
+      ],
+    },
+  ],
+};
 
 const EXPLAIN: ExplainLineView[] = [
   { kind: 'item', label: 'Chicken Karahi', amount: p(80000), context: 'split 4 ways' },
@@ -302,6 +325,9 @@ function Gallery() {
           body="Start tonight's bill and it will show up here."
           action={{ label: "Start tonight's bill", onPress: noop }}
         />
+        <View className="items-center">
+          <ShareCard model={SHARE_MODEL} />
+        </View>
         <MoneyInput value={amt} onChangeText={setAmt} accessibilityLabel="Line total in rupees" />
         <MoneyInput value="12x" onChangeText={noop} accessibilityLabel="Line total in rupees" error="Enter a valid amount" />
       </Section>

@@ -37,6 +37,8 @@ function Shell() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="crew/[id]" />
             <Stack.Screen name="bill/new" />
+            <Stack.Screen name="balances" />
+            <Stack.Screen name="settings" />
             <Stack.Screen name="bill/[id]" />
             <Stack.Screen name="dev/components" />
           </Stack.Protected>

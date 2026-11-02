@@ -47,6 +47,7 @@ const config: ExpoConfig = {
     'expo-font',
     'expo-sqlite',
     'expo-system-ui',
+    'expo-sharing',
     ['react-native-document-scanner-plugin', { cameraPermission: 'Splitr uses the camera to scan receipts.' }],
     [
       'expo-image-picker',

@@ -4,8 +4,17 @@
  * React-free.
  */
 import { calculateBill, previewItemShares, type CalculationResult, type ItemSharesPreview } from '@splitr/calculation-engine';
-import { balancesForMe, deriveBillState, toBillInput, type BillState, type MyBalances } from '@splitr/bill-domain';
-import type { Bill, Group, Person } from '@splitr/shared-types';
+import {
+  balancesForMe,
+  deriveBillState,
+  settleUpPlan,
+  toBillInput,
+  type BillState,
+  type MyBalances,
+  type SettleUpEntry,
+} from '@splitr/bill-domain';
+import { lahoreOffers } from '@splitr/offers-data';
+import type { Bill, CardOffer, Group, Person } from '@splitr/shared-types';
 import type { SplitrNotice, SplitrState } from './create-store';
 
 const isLive = (d: { deletedAt?: string | null }): boolean => (d.deletedAt ?? null) === null;
@@ -153,3 +162,39 @@ export const selectNotice =
   () =>
   (s: SplitrState): SplitrNotice | null =>
     s.notice;
+
+let planKey: readonly Bill[] | null = null;
+let planVal: SettleUpEntry[] = [];
+
+/** E1 plan over live bills. The array is stable while `root.bills` is unchanged. */
+export const selectSettleUpPlan =
+  () =>
+  (s: SplitrState): SettleUpEntry[] => {
+    if (planKey !== s.root.bills) {
+      const live = s.root.bills.filter(isLive);
+      const results = new Map(live.map((b) => [b.id, resultFor(b)] as const));
+      planVal = settleUpPlan(live, results);
+      planKey = s.root.bills;
+    }
+    return planVal;
+  };
+
+const NO_CARDS: readonly { id: string; label: string }[] = [];
+const NO_OFFERS: readonly CardOffer[] = [];
+
+/** Saved card labels (stable empty reference when none). */
+export const selectCardLabels =
+  () =>
+  (s: SplitrState): readonly { id: string; label: string }[] =>
+    s.root.cards ?? NO_CARDS;
+
+let offersCache: { user: readonly CardOffer[]; all: readonly CardOffer[] } | null = null;
+
+/** Bundled Lahore offers plus the user's own; the same array while `userOffers` is unchanged. */
+export const selectAllOffers =
+  () =>
+  (s: SplitrState): readonly CardOffer[] => {
+    const user = s.root.userOffers ?? NO_OFFERS;
+    if (!offersCache || offersCache.user !== user) offersCache = { user, all: [...lahoreOffers, ...user] };
+    return offersCache.all;
+  };

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { Info, Trash2 } from 'lucide-react-native';
+import type { Bill } from '@splitr/shared-types';
 import { toBasisPoints, type Adjustment, type AdjustmentId, type Paisa } from '@splitr/calculation-engine';
 import {
   cardDiscount,
@@ -21,6 +22,7 @@ import { splitrStore } from '../../../store';
 import { formatBp, parsePercentToBp, percentErrorText } from '../../../lib/percent';
 import { toRupeeInputText } from '../../../lib/format-money';
 import { StickyAction } from '../../../components/ui';
+import { CardOffersSection } from '../../../components/deals/CardOffersSection';
 import { AmountField, Field, PercentField } from '../../../components/bill/flow/Field';
 import { FlowScreen } from '../../../components/bill/flow/FlowScreen';
 import { Segmented } from '../../../components/bill/flow/Segmented';
@@ -198,15 +200,17 @@ function build(
 export default function ChargesScreen() {
   const { id, bill } = useBillRoute();
   if (!bill) return <BillNotFound />;
-  return <ChargesForm id={id} initial={bill.adjustments} current={bill.adjustments} />;
+  return <ChargesForm id={id} bill={bill} initial={bill.adjustments} current={bill.adjustments} />;
 }
 
 function ChargesForm({
   id,
+  bill,
   initial,
   current,
 }: {
   id: string;
+  bill: Bill;
   initial: readonly Adjustment[];
   current: readonly Adjustment[];
 }) {
@@ -229,7 +233,10 @@ function ChargesForm({
     }
     if (!built.ok) return;
     const live = splitrStore.getState().root.bills.find((b) => b.id === id);
-    const keep = (live?.adjustments ?? []).filter((a) => !managed.has(a.id));
+    // The form's discount row replaces any discount it does not manage (e.g. an applied card offer).
+    const keep = (live?.adjustments ?? []).filter(
+      (a) => !managed.has(a.id) && !(form.discOn && a.kind === 'discount'),
+    );
     splitrStore.getState().setAdjustments(id, [...keep, ...built.adjustments]);
   }, [form]);
 
@@ -283,6 +290,8 @@ function ChargesForm({
         <Text className="font-brico-medium text-body text-muted">
           Switch on what is on the receipt. Everything is optional.
         </Text>
+
+        <CardOffersSection bill={bill} onApplied={() => setForm((f) => ({ ...f, discOn: false, discPrinted: undefined }))} />
 
         <ToggleRow
           title="Card discount"
@@ -400,7 +409,8 @@ function ChargesForm({
           <View className="gap-2 pt-2">
             <Text className="font-brico-extrabold text-item-name text-ink">Other charges on this bill</Text>
             {others.map((a) => {
-              const s = adjustmentSummary(a);
+              const base = adjustmentSummary(a);
+              const s = a.kind === 'discount' ? { ...base, note: `From ${a.label}. ${base.note}` } : base;
               return (
                 <View key={a.id} className="flex-row items-center rounded-card bg-surface-2 pl-4">
                   <View className="flex-1 py-3">

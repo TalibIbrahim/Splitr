@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { explainParticipant } from '@splitr/bill-domain';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
 import {
+  selectAllOffers,
   selectBill,
   selectBillState,
   selectNotice,
@@ -16,8 +17,11 @@ import {
   useSplitr,
 } from '../../../store';
 import { formatMoney } from '../../../lib/format-money';
+import { offerNameFor } from '../../../lib/offer-text';
 import { cardSaving, isTransferMarkedPaid } from '../../../lib/payments';
 import { shareBill, shareToWhatsApp } from '../../../lib/share';
+import { buildShareCardModel, shareBillImage } from '../../../lib/share-image';
+import { ShareCard, type CardView } from '../../../components/share/ShareCard';
 import {
   EmptyState,
   HowYouGotThere,
@@ -54,6 +58,7 @@ export default function BreakdownScreen() {
   const bill = useSplitr(selectBill(id));
   const result = useSplitr(selectResult(id));
   const billState = useSplitr(selectBillState(id));
+  const allOffers = useSplitr(selectAllOffers());
   const notice = useSplitr(selectNotice());
   const dismissNotice = useSplitr((s) => s.dismissNotice);
   const setContributions = useSplitr((s) => s.setContributions);
@@ -64,6 +69,7 @@ export default function BreakdownScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
+  const cardRef = useRef<CardView>(null);
 
   const go = (target: 'items' | 'assign' | 'charges'): void => {
     router.push(`/bill/${id}/${target}` as Href);
@@ -132,6 +138,10 @@ export default function BreakdownScreen() {
       : (meId ?? breakdown.participants[0]?.participantId ?? '');
   const selectedShare = breakdown.participants.find((p) => p.participantId === selectedId);
   const saving = cardSaving(breakdown.adjustments);
+  const savingOffer = offerNameFor(
+    breakdown.adjustments.filter((a) => a.kind === 'discount' && a.amount < 0).map((a) => a.label),
+    allOffers,
+  );
   const isPaid = (t: { from: string; to: string; amount: number }): boolean =>
     isTransferMarkedPaid(bill.transferStatuses, t);
 
@@ -164,9 +174,15 @@ export default function BreakdownScreen() {
     ]);
   };
 
-  const share = (how: 'whatsapp' | 'more'): void => {
+  const share = (how: 'image' | 'whatsapp' | 'more'): void => {
     setShareOpen(false);
-    void (how === 'whatsapp' ? shareToWhatsApp(bill, breakdown) : shareBill(bill, breakdown)).catch(() => {});
+    const job =
+      how === 'image'
+        ? shareBillImage(cardRef, bill, breakdown)
+        : how === 'whatsapp'
+          ? shareToWhatsApp(bill, breakdown)
+          : shareBill(bill, breakdown);
+    void job.catch(() => {});
   };
 
   // Primary action
@@ -230,7 +246,9 @@ export default function BreakdownScreen() {
           <Money amount={breakdown.roundedTotal} variant="hero" />
           {saving > 0 ? (
             <View className="flex-row items-center gap-1">
-              <Text className="font-brico-medium text-body text-ink">The card saved the table</Text>
+              <Text className="font-brico-medium text-body text-ink">
+                {savingOffer ? `The ${savingOffer} card saved the table` : 'The card saved the table'}
+              </Text>
               <Money amount={saving as Paisa} variant="item" />
             </View>
           ) : null}
@@ -347,9 +365,20 @@ export default function BreakdownScreen() {
         </View>
       </View>
 
+      {/* Offscreen card that the Image share captures. Hidden from assistive tech and touches. */}
+      <View
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{ position: 'absolute', left: -10000, top: 0 }}
+      >
+        <ShareCard model={buildShareCardModel(bill, breakdown)} captureRef={cardRef} />
+      </View>
+
       <ShareSheet
         visible={shareOpen}
         onClose={() => setShareOpen(false)}
+        onImage={() => share('image')}
         onWhatsApp={() => share('whatsapp')}
         onMore={() => share('more')}
       />

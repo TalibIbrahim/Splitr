@@ -20,7 +20,24 @@ export {
 } from './assignment';
 export { deriveBillState, type BillState } from './state';
 export { explainParticipant, type ExplainLine } from './explain';
-export { reconcileTransferStatuses, balancesForMe, type MyBalances } from './transfers';
+export {
+  reconcileTransferStatuses,
+  balancesForMe,
+  settleUpPlan,
+  type MyBalances,
+  type SettleUpEntry,
+  type SettleUpTransfer,
+} from './transfers';
 export { canSettle, settleBill, reopenBill } from './settle';
 export { shareSummary } from './share';
 export { draftToBillPatch, type BillPatch } from './draft';
+export {
+  normalizeRestaurant,
+  offersForRestaurant,
+  offerStatus,
+  offerToAdjustment,
+  compareOffers,
+  STALE_AFTER_DAYS,
+  type OfferStatus,
+  type OfferComparison,
+} from './offers';

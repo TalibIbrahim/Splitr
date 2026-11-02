@@ -80,3 +80,58 @@ export function balancesForMe(
       .sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)),
   };
 }
+
+export interface SettleUpTransfer {
+  billId: string;
+  from: ParticipantId;
+  to: ParticipantId;
+  amount: Paisa;
+}
+
+export interface SettleUpEntry {
+  key: string;
+  displayName: string;
+  /** Positive means they owe me. */
+  net: Paisa;
+  sources: SettleUpTransfer[];
+}
+
+/**
+ * E1. Per counterparty (personId, guests by display name): the net of my pending transfers across open, ok bills
+ * that have a settlement, plus the source transfers. Zero nets are omitted; sorted by |net| descending, then key.
+ * No new money maths: amounts come straight from the engine transfers.
+ */
+export function settleUpPlan(
+  bills: readonly Bill[],
+  results: ReadonlyMap<string, CalculationResult>,
+): SettleUpEntry[] {
+  const entries = new Map<string, { displayName: string; net: number; sources: SettleUpTransfer[] }>();
+
+  for (const bill of bills) {
+    const me = bill.meParticipantId;
+    if (bill.status !== 'open' || me === null || (bill.deletedAt ?? null) !== null) continue;
+    const result = results.get(bill.id);
+    if (!result || !result.ok || result.breakdown.settlement === null) continue;
+
+    for (const t of result.breakdown.settlement.transfers) {
+      if (t.from !== me && t.to !== me) continue;
+      if (isTransferPaid(bill, t)) continue;
+      const otherId = t.from === me ? t.to : t.from;
+      const other = bill.participants.find((p) => p.id === otherId);
+      const displayName = other?.displayName ?? otherId;
+      const key = other?.personId ?? displayName;
+      const signed = t.from === me ? -t.amount : t.amount;
+      const transfer: SettleUpTransfer = { billId: bill.id, from: t.from, to: t.to, amount: t.amount };
+      const entry = entries.get(key);
+      if (entry) {
+        entry.net += signed;
+        entry.sources.push(transfer);
+      } else entries.set(key, { displayName, net: signed, sources: [transfer] });
+    }
+  }
+
+  return [...entries.entries()]
+    .filter(([, v]) => v.net !== 0)
+    .map(([key, v]) => ({ key, displayName: v.displayName, net: toPaisa(v.net), sources: v.sources }))
+    .sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+}
