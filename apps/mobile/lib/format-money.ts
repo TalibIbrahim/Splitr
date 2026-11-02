@@ -48,3 +48,12 @@ export function moneyA11yLabel(amount: number): string {
   const rupeesWord = p.rupees === '1' && !p.paisa ? 'rupee' : 'rupees';
   return `${p.negative ? 'minus ' : ''}${p.rupees} ${rupeesWord}${p.paisa ? ` ${Number(p.paisa)} paisa` : ''}`;
 }
+
+/** Plain rupee text for prefilling an input (no grouping, no "Rs"): 180625 → "1806.25", 180600 → "1806". Integer maths only. */
+export function toRupeeInputText(amount: number): string {
+  const negative = amount < 0;
+  const abs = negative ? -amount : amount;
+  const rem = abs % 100;
+  const rupees = (abs - rem) / 100;
+  return `${negative ? '-' : ''}${rupees}${rem === 0 ? '' : `.${rem < 10 ? '0' : ''}${rem}`}`;
+}

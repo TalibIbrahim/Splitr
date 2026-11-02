@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Platform, type TextStyle } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Platform, type TextStyle } from 'react-native';
 import type { Paisa } from '@splitr/calculation-engine';
 import { fontFamily, letterSpacingPx, motion, typeScale, type TypeStyleName } from '@splitr/design-tokens';
 import { formatMoney, moneyA11yLabel } from '../../lib/format-money';
+import { useReducedMotion } from '../../lib/useReducedMotion';
 
 export type MoneyVariant = 'hero' | 'card' | 'item' | 'body' | 'meta';
 
@@ -26,24 +27,6 @@ interface MoneyProps {
   /** Amount sits on the accent fill (the current user's card). */
   onAccent?: boolean;
   className?: string;
-}
-
-function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((v) => {
-        if (alive) setReduced(v);
-      })
-      .catch(() => {});
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
-    return () => {
-      alive = false;
-      sub.remove();
-    };
-  }, []);
-  return reduced;
 }
 
 function colorClass(variant: MoneyVariant, onInk?: boolean, onHero?: boolean, onAccent?: boolean): string {

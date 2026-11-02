@@ -1,6 +1,7 @@
 import '../global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { useSplitr } from '../store';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -17,10 +18,30 @@ void SplashScreen.preventAutoHideAsync();
 
 function Shell() {
   const { scheme } = useTheme();
+  const hydrated = useSplitr((s) => s.hydrated);
+  const recovery = useSplitr((s) => s.recovery);
+  const hasMe = useSplitr((s) => s.root.me !== null);
+
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }} />
+      {hydrated ? (
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+          <Stack.Protected guard={recovery !== null}>
+            <Stack.Screen name="recovery" />
+          </Stack.Protected>
+          <Stack.Protected guard={recovery === null && !hasMe}>
+            <Stack.Screen name="onboarding" />
+          </Stack.Protected>
+          <Stack.Protected guard={recovery === null && hasMe}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="crew/[id]" />
+            <Stack.Screen name="bill/new" />
+            <Stack.Screen name="bill/[id]" />
+            <Stack.Screen name="dev/components" />
+          </Stack.Protected>
+        </Stack>
+      ) : null}
     </>
   );
 }

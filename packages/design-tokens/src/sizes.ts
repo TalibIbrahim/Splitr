@@ -8,6 +8,8 @@ export const sizes = {
   buttonHeight: { md: 48, lg: 56 },
   /** Bottom-sheet grabber bar. */
   grabber: { width: 40, height: 4 },
+  /** Icon disc (empty states). */
+  iconDisc: 64,
   /** Active-tab indicator bar. */
   tabIndicator: { width: 24, height: 4 },
 } as const;

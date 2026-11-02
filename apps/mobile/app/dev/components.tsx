@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
-import { Check, Info, ScanLine } from 'lucide-react-native';
+import { Check, Info, Receipt, ScanLine } from 'lucide-react-native';
 import type { Paisa } from '@splitr/calculation-engine';
 import { fontFamily, typeScale } from '@splitr/design-tokens';
 import { ThemeProvider, useTheme, type Scheme } from '../../theme';
@@ -17,6 +17,23 @@ import {
   StickyAction,
   type TabKey,
 } from '../../components/ui';
+import {
+  AssignAvatarRow,
+  BalanceTile,
+  BillListRow,
+  CrewHeroCard,
+  EmptyState,
+  HowYouGotThere,
+  ItemCard,
+  MoneyInput,
+  PersonCard,
+  StatePill,
+  StepHeader,
+  TransferRow,
+  type BillStateView,
+  type BillStep,
+  type ExplainLineView,
+} from '../../components/bill';
 
 const p = (n: number) => n as Paisa;
 
@@ -27,6 +44,29 @@ const PEOPLE = [
   { id: 'd', name: 'Hina Ali' },
   { id: 'e', name: 'Omar Sheikh' },
 ];
+
+const FIXTURE_B = [
+  { id: 'm', name: 'Mahhee', isCurrentUser: true, subtotal: p(180600) },
+  { id: 'h', name: 'Hamza', subtotal: p(263500) },
+  { id: 'al', name: 'Ali', subtotal: p(225300) },
+  { id: 's', name: 'Saad', subtotal: p(180600) },
+];
+
+const EXPLAIN: ExplainLineView[] = [
+  { kind: 'item', label: 'Chicken Karahi', amount: p(80000), context: 'split 4 ways' },
+  { kind: 'item', label: 'Daal Makhni', amount: p(47500), context: 'split 2 ways' },
+  { kind: 'item', label: 'Garlic Naan', amount: p(18000), context: 'split 4 ways' },
+  { kind: 'item', label: 'Mint Margarita', amount: p(45000), context: '1 of 3' },
+  { kind: 'item', label: 'Doodh Patti', amount: p(22000), context: 'split 4 ways' },
+  { kind: 'items-subtotal', label: 'Items', amount: p(212500) },
+  { kind: 'adjustment', label: 'Card discount', amount: p(-42500), context: '20% of 2,125' },
+  { kind: 'adjustment', label: 'Tax', amount: p(10625), context: '5% of 2,125' },
+  { kind: 'exact', label: 'Exact share', amount: p(180625) },
+  { kind: 'rounding', label: 'Rounded', amount: p(-25) },
+  { kind: 'final', label: 'Your share', amount: p(180600) },
+];
+
+const STATES: BillStateView[] = ['needs-review', 'unassigned', 'ready', 'reconciled', 'settled'];
 
 const tnumStyle = {
   fontFamily: fontFamily.extrabold,
@@ -51,6 +91,11 @@ function Gallery() {
   const [selected, setSelected] = useState<string>('b');
   const [tab, setTab] = useState<TabKey>('home');
   const noop = () => {};
+  const [who, setWho] = useState<string>('m');
+  const [step, setStep] = useState<BillStep>('assign');
+  const [paid, setPaid] = useState(false);
+  const [card, setCard] = useState<string>('m');
+  const [amt, setAmt] = useState('1,250');
 
   return (
     <View className="gap-8 bg-bg p-4">
@@ -187,6 +232,78 @@ function Gallery() {
             }
           />
         </View>
+      </Section>
+
+      <Section title="Phase 1 blocks">
+        <StepHeader current={step} onStep={setStep} />
+        <AssignAvatarRow people={FIXTURE_B} selectedId={who} onSelect={setWho} haptic />
+        <View className="gap-3 rounded-card bg-surface p-3">
+          <ItemCard
+            name="Chicken Karahi"
+            qty={1}
+            lineTotal={p(80000)}
+            assignees={[{ id: 'm', name: 'Mahhee', isCurrentUser: true }, { id: 'h', name: 'Hamza' }]}
+            each={p(40000)}
+            onPress={noop}
+            onLongPress={noop}
+          />
+          <ItemCard name="Mint Margarita" qty={3} lineTotal={p(45000)} assignees={[{ id: 'al', name: 'Ali' }]} onPress={noop} />
+          <ItemCard name="Doodh Patti" qty={1} lineTotal={p(22000)} assignees={[]} status="unassigned" onPress={noop} />
+          <ItemCard
+            name="Daal Makhni"
+            qty={1}
+            lineTotal={p(47500)}
+            assignees={[{ id: 'h', name: 'Hamza' }]}
+            status="mismatch"
+            onPress={noop}
+          />
+        </View>
+        <View className="gap-2">
+          {STATES.map((st) => (
+            <StatePill key={st} state={st} detail={st === 'unassigned' ? '2 left' : undefined} />
+          ))}
+        </View>
+        <View className="flex-row flex-wrap gap-3">
+          {FIXTURE_B.map((f, i) => (
+            <View key={f.id} className="w-[47%]">
+              <PersonCard
+                name={f.name}
+                amount={f.subtotal}
+                isMe={f.isCurrentUser}
+                tag={f.isCurrentUser ? 'owe' : i === 1 ? 'paid' : 'owes'}
+                selected={card === f.id}
+                onPress={() => setCard(f.id)}
+              />
+            </View>
+          ))}
+        </View>
+        <HowYouGotThere total={p(180600)} lines={EXPLAIN} defaultExpanded />
+        <View>
+          <TransferRow from="Mahhee" to="Hamza" amount={p(180600)} paid={paid} onTogglePaid={() => setPaid((v) => !v)} />
+          <TransferRow from="Saad" to="Hamza" amount={p(180600)} paid onTogglePaid={noop} />
+        </View>
+        <View className="flex-row gap-3">
+          <BalanceTile kind="you-owe" amount={p(180600)} />
+          <BalanceTile kind="owes-you" amount={p(225300)} />
+        </View>
+        <CrewHeroCard
+          crewName="Friday Crew"
+          people={FIXTURE_B.map(({ id, name, isCurrentUser }) => ({ id, name, isCurrentUser }))}
+          onStartBill={noop}
+        />
+        <CrewHeroCard variant="empty" onMakeCrew={noop} />
+        <View>
+          <BillListRow restaurant="Savour Foods" date="12 Oct" total={p(1806 * 100)} state="reconciled" onPress={noop} />
+          <BillListRow restaurant="Lahore Tikka House" date="3 Oct" total={p(942000)} state="unassigned" stateDetail="2 left" onPress={noop} />
+        </View>
+        <EmptyState
+          icon={Receipt}
+          title="No bills yet"
+          body="Start tonight's bill and it will show up here."
+          action={{ label: "Start tonight's bill", onPress: noop }}
+        />
+        <MoneyInput value={amt} onChangeText={setAmt} accessibilityLabel="Line total in rupees" />
+        <MoneyInput value="12x" onChangeText={noop} accessibilityLabel="Line total in rupees" error="Enter a valid amount" />
       </Section>
     </View>
   );

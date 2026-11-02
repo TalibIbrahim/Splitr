@@ -5,3 +5,6 @@ export { Pill } from './Pill';
 export { Card, type CardTone } from './Card';
 export { Sheet } from './Sheet';
 export { BottomBar, StickyAction, DEFAULT_TABS, type TabKey, type TabItem } from './BottomBar';
+export { TextField } from './TextField';
+export { FilterChip } from './FilterChip';
+export { Snackbar } from './Snackbar';
