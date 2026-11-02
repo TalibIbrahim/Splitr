@@ -1,0 +1,18 @@
+{
+  "name": "@splitr/calculation-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "fast-check": "^4.10.2",
+    "vitest": "5.0.5"
+  }
+}

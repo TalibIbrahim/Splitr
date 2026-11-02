@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Expo's monorepo guide: switch to hoisted installs if isolated installs cause issues with pnpm.
+nodeLinker: hoisted
+
+allowBuilds:
+  esbuild: true
+  sharp: false
+  unrs-resolver: false
