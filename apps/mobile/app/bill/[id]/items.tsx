@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View, type TextInputInstance } from 'react-native';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  Text,
+  View,
+  type ListRenderItem,
+  type TextInputInstance,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Plus, Receipt, ScanLine, Trash2 } from 'lucide-react-native';
 import type { Item } from '@splitr/calculation-engine';
@@ -24,7 +32,14 @@ import { rupeesErrorText } from '../../../components/bill/flow/messages';
 export default function ItemsScreen() {
   const { id, bill } = useBillRoute();
   if (!bill) return <BillNotFound />;
-  return <ItemsBody id={id} items={bill.items} printedTotal={bill.printedTotal} hasDraft={!!bill.receipt?.draft} />;
+  return (
+    <ItemsBody
+      id={id}
+      items={bill.items}
+      printedTotal={bill.printedTotal}
+      hasDraft={!!bill.receipt?.draft}
+    />
+  );
 }
 
 function ItemsBody({
@@ -73,7 +88,14 @@ function ItemsBody({
     setTried(true);
     if (!nameOk || !parsed.ok || qtyN === null) {
       // First failure is announced by the field's own error; repeat failures re-announce here.
-      if (tried) announce(!nameOk ? 'Give the item a name' : !parsed.ok ? rupeesErrorText(parsed.reason) : 'Check the quantity');
+      if (tried)
+        announce(
+          !nameOk
+            ? 'Give the item a name'
+            : !parsed.ok
+              ? rupeesErrorText(parsed.reason)
+              : 'Check the quantity',
+        );
       if (!nameOk) nameRef.current?.focus();
       else if (!parsed.ok) amountRef.current?.focus();
       return;
@@ -86,10 +108,22 @@ function ItemsBody({
     nameRef.current?.focus();
   };
 
-  const remove = (it: Item) => {
-    setRemoved(act().removeItem(id, it.id));
-    setEditing(null);
-  };
+  const remove = useCallback(
+    (it: Item) => {
+      setRemoved(splitrStore.getState().removeItem(id, it.id));
+      setEditing(null);
+    },
+    [id],
+  );
+  const edit = useCallback((it: Item) => setEditing(it), []);
+  const renderItem: ListRenderItem<Item> = useCallback(
+    ({ item }) => (
+      <View className="pb-2">
+        <ItemRow item={item} onEdit={edit} onDelete={remove} />
+      </View>
+    ),
+    [edit, remove],
+  );
   const undo = () => {
     if (!removed) return;
     act().restoreItem(removed);
@@ -102,7 +136,9 @@ function ItemsBody({
 
   const receiptParsed = parseRupees(receiptText);
   const receiptError =
-    receiptText.trim() !== '' && !receiptParsed.ok ? rupeesErrorText(receiptParsed.reason) : undefined;
+    receiptText.trim() !== '' && !receiptParsed.ok
+      ? rupeesErrorText(receiptParsed.reason)
+      : undefined;
   const onReceiptChange = (t: string) => {
     setReceiptText(t);
     const r = parseRupees(t);
@@ -131,7 +167,10 @@ function ItemsBody({
               accessibilityLiveRegion="polite"
               className="mx-4 mt-2 flex-row items-center justify-between rounded-button bg-chip pl-4"
             >
-              <Text numberOfLines={1} className="flex-1 font-brico-semibold text-body-small text-ink">
+              <Text
+                numberOfLines={1}
+                className="flex-1 font-brico-semibold text-body-small text-ink"
+              >
                 Removed {removed.item.name}
               </Text>
               <Pressable
@@ -154,140 +193,130 @@ function ItemsBody({
         </View>
       }
     >
-      <ScrollView
+      <FlatList
+        data={items}
+        keyExtractor={(it) => it.id}
+        renderItem={renderItem}
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-4 px-4 pb-6 pt-3"
+        contentContainerClassName="px-4 pb-6 pt-3"
         showsVerticalScrollIndicator={false}
-      >
-        {hasDraft ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Review scan, check the items read from the receipt"
-            onPress={() => router.push(billHref(id, 'review'))}
-            style={{ minHeight: sizes.minTouch }}
-            className="flex-row items-center gap-3 rounded-card border-2 border-ink bg-bg px-4 py-3 active:opacity-pressed"
-          >
-            <ScanLine size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
-            <View className="flex-1">
-              <Text className="font-brico-extrabold text-item-name text-ink">Review scan</Text>
-              <Text className="font-brico-medium text-body-small text-muted">Check what was read from the receipt</Text>
-            </View>
-            <ChevronRight size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
-          </Pressable>
-        ) : null}
+        initialNumToRender={12}
+        windowSize={7}
+        removeClippedSubviews={Platform.OS === 'android'}
+        ListHeaderComponent={
+          <View className="gap-4 pb-4">
+            {hasDraft ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Review scan, check the items read from the receipt"
+                onPress={() => router.push(billHref(id, 'review'))}
+                style={{ minHeight: sizes.minTouch }}
+                className="flex-row items-center gap-3 rounded-card border-2 border-ink bg-bg px-4 py-3 active:opacity-pressed"
+              >
+                <ScanLine
+                  size={sizes.icon.md}
+                  color={colors.ink}
+                  strokeWidth={sizes.icon.strokeWidth}
+                />
+                <View className="flex-1">
+                  <Text className="font-brico-extrabold text-item-name text-ink">Review scan</Text>
+                  <Text className="font-brico-medium text-body-small text-muted">
+                    Check what was read from the receipt
+                  </Text>
+                </View>
+                <ChevronRight
+                  size={sizes.icon.md}
+                  color={colors.ink}
+                  strokeWidth={sizes.icon.strokeWidth}
+                />
+              </Pressable>
+            ) : null}
 
-        <Card tone="surface2" className="flex-row items-center justify-between">
-          <View>
-            <Text className="font-brico-semibold text-meta text-muted">Items subtotal</Text>
-            <Text className="font-brico-medium text-body-small text-muted">
-              {items.length === 1 ? '1 item' : `${items.length} items`}
-            </Text>
-          </View>
-          <Money amount={sumLineTotals(items)} variant="card" />
-        </Card>
+            <Card tone="surface2" className="flex-row items-center justify-between">
+              <View>
+                <Text className="font-brico-semibold text-meta text-muted">Items subtotal</Text>
+                <Text className="font-brico-medium text-body-small text-muted">
+                  {items.length === 1 ? '1 item' : `${items.length} items`}
+                </Text>
+              </View>
+              <Money amount={sumLineTotals(items)} variant="card" />
+            </Card>
 
-        <Button
-          label="Scan more"
-          accessibilityLabel="Scan more of the receipt"
-          icon={ScanLine}
-          variant="outline"
-          fullWidth
-          onPress={() => void scan.start('scan')}
-        />
-
-        <View className="gap-3">
-          <Field
-            inputRef={nameRef}
-            accessibilityLabel="Item name"
-            placeholder="Item name, e.g. Chicken Karahi"
-            value={name}
-            onChangeText={setName}
-            autoFocus
-            autoCapitalize="words"
-            returnKeyType="next"
-            blurOnSubmit={false}
-            onSubmitEditing={() => amountRef.current?.focus()}
-            error={nameError}
-          />
-          <View className="flex-row items-start gap-2">
-            <QtyControl value={qty} onChange={setQty} subject={name.trim() || undefined} />
-            <AmountField
-              inputRef={amountRef}
-              accessibilityLabel="Line total for this item in rupees"
-              placeholder="0"
-              value={amount}
-              onChangeText={setAmount}
-              returnKeyType="done"
-              blurOnSubmit={false}
-              onSubmitEditing={add}
-              error={amountError}
+            <Button
+              label="Scan more"
+              accessibilityLabel="Scan more of the receipt"
+              icon={ScanLine}
+              variant="outline"
+              fullWidth
+              onPress={() => void scan.start('scan')}
             />
-          </View>
-          <Button
-            label="Add"
-            accessibilityLabel="Add item"
-            icon={Plus}
-            size="lg"
-            fullWidth
-            onPress={add}
-          />
-        </View>
 
-        {items.length === 0 ? (
+            <View className="gap-3">
+              <Field
+                inputRef={nameRef}
+                accessibilityLabel="Item name"
+                placeholder="Item name, e.g. Chicken Karahi"
+                value={name}
+                onChangeText={setName}
+                autoFocus
+                autoCapitalize="words"
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => amountRef.current?.focus()}
+                error={nameError}
+              />
+              <View className="flex-row items-start gap-2">
+                <QtyControl value={qty} onChange={setQty} subject={name.trim() || undefined} />
+                <AmountField
+                  inputRef={amountRef}
+                  accessibilityLabel="Line total for this item in rupees"
+                  placeholder="0"
+                  value={amount}
+                  onChangeText={setAmount}
+                  returnKeyType="done"
+                  blurOnSubmit={false}
+                  onSubmitEditing={add}
+                  error={amountError}
+                />
+              </View>
+              <Button
+                label="Add"
+                accessibilityLabel="Add item"
+                icon={Plus}
+                size="lg"
+                fullWidth
+                onPress={add}
+              />
+            </View>
+          </View>
+        }
+        ListEmptyComponent={
           <EmptyState
             icon={Receipt}
             title="No items yet"
             body="Type each dish and its line total, then tap Add. The keyboard stays up."
           />
-        ) : (
-          <View className="gap-2">
-            {items.map((it) => (
-              <View key={it.id} className="flex-row items-center rounded-card bg-surface-2">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Edit ${it.name}`}
-                  onPress={() => setEditing(it)}
-                  style={{ minHeight: sizes.minTouch }}
-                  className="flex-1 flex-row items-center gap-3 py-3 pl-4 active:opacity-pressed"
-                >
-                  <View className="flex-1">
-                    <Text numberOfLines={1} className="font-brico-bold text-item-name text-ink">
-                      {it.name}
-                    </Text>
-                    {it.quantity > 1 ? (
-                      <Text className="font-brico-semibold text-meta text-muted">Quantity {it.quantity}</Text>
-                    ) : null}
-                  </View>
-                  <Money amount={it.lineTotal} variant="item" />
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Delete ${it.name}`}
-                  onPress={() => remove(it)}
-                  style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                  className="items-center justify-center active:opacity-pressed"
-                >
-                  <Trash2 size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
-                </Pressable>
-              </View>
-            ))}
+        }
+        ListFooterComponent={
+          <View className="pt-4">
+            <View className="gap-2">
+              <Text className="font-brico-extrabold text-item-name text-ink">
+                Total on the receipt (optional)
+              </Text>
+              <Text className="font-brico-medium text-body-small text-muted">
+                We will tell you if the split does not match it.
+              </Text>
+              <AmountField
+                accessibilityLabel="Total printed on the receipt, in rupees"
+                placeholder="Optional"
+                value={receiptText}
+                onChangeText={onReceiptChange}
+                error={receiptError}
+              />
+            </View>
           </View>
-        )}
-
-        <View className="gap-2">
-          <Text className="font-brico-extrabold text-item-name text-ink">Total on the receipt (optional)</Text>
-          <Text className="font-brico-medium text-body-small text-muted">
-            We will tell you if the split does not match it.
-          </Text>
-          <AmountField
-            accessibilityLabel="Total printed on the receipt, in rupees"
-            placeholder="Optional"
-            value={receiptText}
-            onChangeText={onReceiptChange}
-            error={receiptError}
-          />
-        </View>
-      </ScrollView>
+        }
+      />
 
       <EditSheet
         key={editing?.id ?? 'none'}
@@ -303,6 +332,48 @@ function ItemsBody({
   );
 }
 
+const ItemRow = memo(function ItemRow({
+  item: it,
+  onEdit,
+  onDelete,
+}: {
+  item: Item;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View className="flex-row items-center rounded-card bg-surface-2">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Edit ${it.name}`}
+        onPress={() => onEdit(it)}
+        style={{ minHeight: sizes.minTouch }}
+        className="flex-1 flex-row items-center gap-3 py-3 pl-4 active:opacity-pressed"
+      >
+        <View className="flex-1">
+          <Text numberOfLines={1} className="font-brico-bold text-item-name text-ink">
+            {it.name}
+          </Text>
+          {it.quantity > 1 ? (
+            <Text className="font-brico-semibold text-meta text-muted">Quantity {it.quantity}</Text>
+          ) : null}
+        </View>
+        <Money amount={it.lineTotal} variant="item" />
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${it.name}`}
+        onPress={() => onDelete(it)}
+        style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
+        className="items-center justify-center active:opacity-pressed"
+      >
+        <Trash2 size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
+      </Pressable>
+    </View>
+  );
+});
+
 function EditSheet({
   item,
   onClose,
@@ -312,7 +383,10 @@ function EditSheet({
   item: Item | null;
   onClose: () => void;
   onDelete: (item: Item) => void;
-  onSave: (item: Item, patch: { name: string; quantity: number; lineTotal: Item['lineTotal'] }) => void;
+  onSave: (
+    item: Item,
+    patch: { name: string; quantity: number; lineTotal: Item['lineTotal'] },
+  ) => void;
 }) {
   const [name, setName] = useState(item?.name ?? '');
   const [qty, setQty] = useState(item ? String(item.quantity) : '1');

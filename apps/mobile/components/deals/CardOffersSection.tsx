@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useDeferredValue, useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -22,10 +22,25 @@ export function CardOffersSection({ bill, onApplied }: { bill: Bill; onApplied?:
   const all = useSplitr(selectAllOffers());
   const today = todayIso();
 
+  // Only what changes the savings: item ids/quantities/totals, non-discount charges, date, restaurant.
+  // The whole bill object changes on every keystroke elsewhere, so it must not be a dependency.
+  const key = JSON.stringify([
+    bill.restaurantName,
+    bill.date,
+    bill.items.map((i) => [i.id, i.quantity, i.lineTotal]),
+    bill.adjustments
+      .filter((a) => a.kind !== 'discount')
+      .map((a) => ({ ...a, label: undefined, printedAmount: undefined })),
+  ]);
+  // `key` captures every field compareOffers reads, so the snapshot only changes with it.
+  const snapshot = useMemo(() => ({ key, bill }), [key]);
+  const deferred = useDeferredValue(snapshot);
+
   const rows = useMemo(() => {
-    const matched = offersForRestaurant(all, bill.restaurantName);
-    return matched.length === 0 ? [] : compareOffers(bill, matched, today);
-  }, [all, bill, today]);
+    const b = deferred.bill;
+    const matched = offersForRestaurant(all, b.restaurantName);
+    return matched.length === 0 ? [] : compareOffers(b, matched, today);
+  }, [all, deferred, today]);
 
   if (rows.length === 0) return null;
 
@@ -34,7 +49,12 @@ export function CardOffersSection({ bill, onApplied }: { bill: Bill; onApplied?:
     if (!row) return;
     const live = splitrStore.getState().root.bills.find((b) => b.id === bill.id);
     const keep = (live?.adjustments ?? []).filter((a) => a.kind !== 'discount');
-    splitrStore.getState().setAdjustments(bill.id, [...keep, offerToAdjustment(row.offer, randomUUID() as AdjustmentId)]);
+    splitrStore
+      .getState()
+      .setAdjustments(bill.id, [
+        ...keep,
+        offerToAdjustment(row.offer, randomUUID() as AdjustmentId),
+      ]);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onApplied?.();
   };
@@ -58,7 +78,11 @@ export function CardOffersSection({ bill, onApplied }: { bill: Bill; onApplied?:
               <View className="gap-1">
                 <Text className="font-brico-bold text-body text-ink">{label}</Text>
                 <View className="flex-row items-center gap-1">
-                  <Info size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
+                  <Info
+                    size={sizes.icon.sm}
+                    color={colors.ink}
+                    strokeWidth={sizes.icon.strokeWidth}
+                  />
                   <Text className="flex-1 font-brico-bold text-body-small text-ink">
                     {reasonText(row.reason, row.offer)}
                   </Text>
@@ -66,8 +90,12 @@ export function CardOffersSection({ bill, onApplied }: { bill: Bill; onApplied?:
               </View>
             )}
             <View className="gap-1">
-              <Text className="font-brico-semibold text-meta text-muted">{sourceLine(row.offer)}</Text>
-              {row.stale ? <Text className="font-brico-bold text-meta text-ink">{STALE_TEXT}</Text> : null}
+              <Text className="font-brico-semibold text-meta text-muted">
+                {sourceLine(row.offer)}
+              </Text>
+              {row.stale ? (
+                <Text className="font-brico-bold text-meta text-ink">{STALE_TEXT}</Text>
+              ) : null}
               <Text className="font-brico-semibold text-meta text-muted">{NOT_GUARANTEED}</Text>
             </View>
             {row.applied && row.saving > 0 ? (
@@ -85,7 +113,9 @@ export function CardOffersSection({ bill, onApplied }: { bill: Bill; onApplied?:
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={`See all card offers at ${bill.restaurantName}`}
-        onPress={() => router.push(href(`/deals?restaurant=${encodeURIComponent(bill.restaurantName)}`))}
+        onPress={() =>
+          router.push(href(`/deals?restaurant=${encodeURIComponent(bill.restaurantName)}`))
+        }
         style={{ minHeight: sizes.minTouch }}
         className="justify-center active:opacity-pressed"
       >

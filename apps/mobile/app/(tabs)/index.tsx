@@ -1,11 +1,17 @@
 import { useMemo } from 'react';
 import { href } from '../../lib/routes';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Plus, Receipt, Settings } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
-import { selectActiveBills, selectBalances, selectLatestGroup, selectPeople, useSplitr } from '../../store';
+import {
+  selectActiveBills,
+  selectBalances,
+  selectLatestGroup,
+  selectPeople,
+  useSplitr,
+} from '../../store';
 import { useTheme } from '../../theme';
 import { Button } from '../../components/ui';
 import { BalanceTile, CrewHeroCard, EmptyState } from '../../components/bill';
@@ -33,53 +39,68 @@ export default function Home() {
   const openBalances = (): void => router.push(href('/balances'));
   const lately = bills.slice(0, LATELY_COUNT);
 
+  const header = (
+    <View className="gap-4 pb-4">
+      <View className="flex-row items-center justify-between">
+        <Text
+          accessibilityRole="header"
+          accessibilityLabel="splitr"
+          className="font-brico-extrabold text-screen-title text-ink"
+        >
+          splitr<Text className="text-accent">.</Text>
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          onPress={() => router.push(href('/settings'))}
+          style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
+          className="items-center justify-center active:opacity-pressed"
+        >
+          <Settings size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
+        </Pressable>
+      </View>
+
+      {group ? (
+        <CrewHeroCard
+          crewName={group.name}
+          people={members}
+          onStartBill={() => router.push(href(`/bill/new?groupId=${group.id}`))}
+        />
+      ) : (
+        <CrewHeroCard variant="empty" onMakeCrew={() => router.push(href('/crew/new'))} />
+      )}
+
+      <View className="flex-row gap-3">
+        <BalanceTile kind="you-owe" amount={balances.youOwe} onPress={openBalances} />
+        <BalanceTile kind="owes-you" amount={balances.owedToYou} onPress={openBalances} />
+      </View>
+
+      <View className="flex-row items-center justify-between">
+        <Text
+          accessibilityRole="header"
+          className="font-brico-extrabold text-screen-title text-ink"
+        >
+          Lately
+        </Text>
+        <Button
+          variant="outline"
+          label="New bill"
+          accessibilityLabel="Start a new bill"
+          icon={Plus}
+          onPress={() => router.push(href('/bill/new'))}
+        />
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg">
-      <ScrollView contentContainerClassName="gap-4 px-4 pb-6 pt-2">
-        <View className="flex-row items-center justify-between">
-          <Text accessibilityRole="header" accessibilityLabel="splitr" className="font-brico-extrabold text-screen-title text-ink">
-            splitr<Text className="text-accent">.</Text>
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Settings"
-            onPress={() => router.push(href('/settings'))}
-            style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-            className="items-center justify-center active:opacity-pressed"
-          >
-            <Settings size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
-          </Pressable>
-        </View>
-
-        {group ? (
-          <CrewHeroCard
-            crewName={group.name}
-            people={members}
-            onStartBill={() => router.push(href(`/bill/new?groupId=${group.id}`))}
-          />
-        ) : (
-          <CrewHeroCard variant="empty" onMakeCrew={() => router.push(href('/crew/new'))} />
-        )}
-
-        <View className="flex-row gap-3">
-          <BalanceTile kind="you-owe" amount={balances.youOwe} onPress={openBalances} />
-          <BalanceTile kind="owes-you" amount={balances.owedToYou} onPress={openBalances} />
-        </View>
-
-        <View className="flex-row items-center justify-between">
-          <Text accessibilityRole="header" className="font-brico-extrabold text-screen-title text-ink">
-            Lately
-          </Text>
-          <Button
-            variant="outline"
-            label="New bill"
-            accessibilityLabel="Start a new bill"
-            icon={Plus}
-            onPress={() => router.push(href('/bill/new'))}
-          />
-        </View>
-
-        {lately.length === 0 ? (
+      <FlatList
+        data={lately}
+        keyExtractor={(b) => b.id}
+        renderItem={({ item: b }) => <ConnectedBillRow billId={b.id} />}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
           <EmptyState
             icon={Receipt}
             title="No bills yet"
@@ -90,14 +111,12 @@ export default function Home() {
               onPress: () => router.push(href('/bill/new')),
             }}
           />
-        ) : (
-          <View>
-            {lately.map((b) => (
-              <ConnectedBillRow key={b.id} billId={b.id} />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+        }
+        contentContainerClassName="px-4 pb-6 pt-2"
+        initialNumToRender={10}
+        windowSize={7}
+        removeClippedSubviews={Platform.OS === 'android'}
+      />
     </SafeAreaView>
   );
 }
