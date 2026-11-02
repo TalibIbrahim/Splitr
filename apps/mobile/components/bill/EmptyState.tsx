@@ -21,7 +21,7 @@ export function EmptyState({ icon: Icon, title, body, action }: EmptyStateProps)
       >
         <Icon size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
       </View>
-      <Text className="text-center font-brico-extrabold text-screen-title text-ink">{title}</Text>
+      <Text accessibilityRole="header" className="text-center font-brico-extrabold text-screen-title text-ink">{title}</Text>
       <Text className="text-center font-brico-medium text-body text-muted">{body}</Text>
       {action ? (
         <Button

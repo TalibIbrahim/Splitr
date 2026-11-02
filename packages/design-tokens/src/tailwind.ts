@@ -36,6 +36,10 @@ export const tailwindTheme = {
     'button-md': `${sizes.buttonHeight.md}px`,
     'button-lg': `${sizes.buttonHeight.lg}px`,
   },
+  minHeight: {
+    'button-md': `${sizes.buttonHeight.md}px`,
+    'button-lg': `${sizes.buttonHeight.lg}px`,
+  },
   opacity: Object.fromEntries(Object.entries(opacity).map(([k, v]) => [k, String(v)])),
   fontFamily: { ...fontFamily },
   fontSize,

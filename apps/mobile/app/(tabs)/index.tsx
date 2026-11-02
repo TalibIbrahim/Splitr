@@ -37,16 +37,9 @@ export default function Home() {
     <SafeAreaView edges={['top']} className="flex-1 bg-bg">
       <ScrollView contentContainerClassName="gap-4 px-4 pb-6 pt-2">
         <View className="flex-row items-center justify-between">
-          <Pressable
-            accessibilityRole="header"
-            accessibilityLabel="splitr"
-            onLongPress={__DEV__ ? () => router.push('/dev/components') : undefined}
-            style={{ minHeight: sizes.minTouch }}
-            className="flex-row items-center self-start"
-          >
-            <Text className="font-brico-extrabold text-screen-title text-ink">splitr</Text>
-            <Text className="font-brico-extrabold text-screen-title text-accent">.</Text>
-          </Pressable>
+          <Text accessibilityRole="header" accessibilityLabel="splitr" className="font-brico-extrabold text-screen-title text-ink">
+            splitr<Text className="text-accent">.</Text>
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Settings"

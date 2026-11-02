@@ -8,6 +8,7 @@ import { sizes } from '@splitr/design-tokens';
 import { selectGroups, selectPeople, splitrStore, useSplitr } from '../../store';
 import { Avatar, Button, ModalSheet, TextField } from '../../components/ui';
 import { useTheme } from '../../theme';
+import { nameLines } from '../../lib/a11y';
 
 export default function CrewEditor() {
   const router = useRouter();
@@ -139,7 +140,7 @@ export default function CrewEditor() {
                       >
                         <Avatar name={p.displayName} size="sm" isCurrentUser={isMe} />
                         <Text
-                          numberOfLines={1}
+                          numberOfLines={nameLines()}
                           className={`flex-1 text-item-name ${on ? 'font-brico-extrabold' : 'font-brico-medium'} text-ink`}
                         >
                           {p.displayName}

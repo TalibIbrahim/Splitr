@@ -37,6 +37,7 @@ export function AssignAvatarRow({ people, selectedId, onSelect, haptic }: Assign
           selected={selectedId === p.id}
           subtitle={p.subtotal}
           haptic={haptic}
+          role="radio"
           onPress={() => onSelect(p.id)}
         />
       ))}

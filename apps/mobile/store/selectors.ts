@@ -3,7 +3,13 @@
  * object identity (a bill mutation creates a new object, so the cache entry is simply never hit again).
  * React-free.
  */
-import { calculateBill, previewItemShares, type CalculationResult, type ItemSharesPreview } from '@splitr/calculation-engine';
+import {
+  calculateBill,
+  previewItemShares,
+  type CalculationResult,
+  type ItemSharesPreview,
+  type Paisa,
+} from '@splitr/calculation-engine';
 import {
   balancesForMe,
   deriveBillState,
@@ -42,10 +48,19 @@ function previewFor(bill: Bill): ItemSharesPreview {
   return p;
 }
 
+let billMapKey: readonly Bill[] | null = null;
+let billMapVal = new Map<string, Bill>();
+
+/** id -> bill Map, rebuilt only when `root.bills` changes identity (D9b). */
 export const selectBill =
   (id: string) =>
-  (s: SplitrState): Bill | undefined =>
-    s.root.bills.find((b) => b.id === id);
+  (s: SplitrState): Bill | undefined => {
+    if (billMapKey !== s.root.bills) {
+      billMapVal = new Map(s.root.bills.map((b) => [b.id, b] as const));
+      billMapKey = s.root.bills;
+    }
+    return billMapVal.get(id);
+  };
 
 export const selectResult =
   (id: string) =>
@@ -68,10 +83,44 @@ export const selectBillState =
     if (!bill) return undefined;
     let st = stateCache.get(bill);
     if (!st) {
-      st = deriveBillState(bill, resultFor(bill));
+      // D9b: settled bills never run the engine.
+      st = bill.status === 'settled' ? 'settled' : deriveBillState(bill, resultFor(bill));
       stateCache.set(bill, st);
     }
     return st;
+  };
+
+export interface BillSummary {
+  state: BillState;
+  /** Rounded bill total, or null when there is no usable result. */
+  roundedTotal: Paisa | null;
+  needsAttentionCount: number;
+}
+
+const summaryCache = new WeakMap<Bill, BillSummary>();
+
+/** List-row summary. Settled bills read `finalSnapshot`; open bills use the memoised result and preview. Stable per bill object. */
+export const selectBillSummary =
+  (id: string) =>
+  (s: SplitrState): BillSummary | undefined => {
+    const bill = selectBill(id)(s);
+    if (!bill) return undefined;
+    let sum = summaryCache.get(bill);
+    if (!sum) {
+      if (bill.status === 'settled') {
+        sum = { state: 'settled', roundedTotal: bill.finalSnapshot?.roundedTotal ?? null, needsAttentionCount: 0 };
+      } else {
+        const result = resultFor(bill);
+        const state = deriveBillState(bill, result);
+        sum = {
+          state,
+          roundedTotal: result.ok ? result.breakdown.roundedTotal : null,
+          needsAttentionCount: state === 'unassigned' ? previewFor(bill).needsAttentionCount : 0,
+        };
+      }
+      summaryCache.set(bill, sum);
+    }
+    return sum;
   };
 
 // Single-entry caches keyed on the identity of the input array: stable references for React selectors.
@@ -101,7 +150,8 @@ export const selectBalances =
   (s: SplitrState): MyBalances => {
     if (balancesKey !== s.root.bills) {
       const live = s.root.bills.filter(isLive);
-      const results = new Map(live.map((b) => [b.id, resultFor(b)] as const));
+      // D9b: settled bills are excluded by the domain functions, so only open bills are calculated.
+      const results = new Map(live.filter((b) => b.status === 'open').map((b) => [b.id, resultFor(b)] as const));
       balancesVal = balancesForMe(live, results);
       balancesKey = s.root.bills;
     }
@@ -172,7 +222,8 @@ export const selectSettleUpPlan =
   (s: SplitrState): SettleUpEntry[] => {
     if (planKey !== s.root.bills) {
       const live = s.root.bills.filter(isLive);
-      const results = new Map(live.map((b) => [b.id, resultFor(b)] as const));
+      // D9b: settled bills are excluded by the domain functions, so only open bills are calculated.
+      const results = new Map(live.filter((b) => b.status === 'open').map((b) => [b.id, resultFor(b)] as const));
       planVal = settleUpPlan(live, results);
       planKey = s.root.bills;
     }

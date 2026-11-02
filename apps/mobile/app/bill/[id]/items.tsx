@@ -7,6 +7,7 @@ import { parseRupees } from '@splitr/bill-domain';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
 import { splitrStore, type RemovedItem } from '../../../store';
+import { announce, useDismissDelay } from '../../../lib/a11y';
 import { toRupeeInputText } from '../../../lib/format-money';
 import { parseQty, sumLineTotals } from '../../../lib/sums';
 import { Button, Card, ModalSheet, Money, StickyAction } from '../../../components/ui';
@@ -54,11 +55,13 @@ function ItemsBody({
     printedTotal === undefined ? '' : toRupeeInputText(printedTotal),
   );
 
+  const undoDelay = useDismissDelay(6000);
   useEffect(() => {
     if (!removed) return;
-    const t = setTimeout(() => setRemoved(null), 6000);
+    announce(`Removed ${removed.item.name}. Undo available.`);
+    const t = setTimeout(() => setRemoved(null), undoDelay);
     return () => clearTimeout(t);
-  }, [removed]);
+  }, [removed, undoDelay]);
 
   const parsed = parseRupees(amount);
   const qtyN = parseQty(qty);
@@ -69,6 +72,8 @@ function ItemsBody({
   const add = () => {
     setTried(true);
     if (!nameOk || !parsed.ok || qtyN === null) {
+      // First failure is announced by the field's own error; repeat failures re-announce here.
+      if (tried) announce(!nameOk ? 'Give the item a name' : !parsed.ok ? rupeesErrorText(parsed.reason) : 'Check the quantity');
       if (!nameOk) nameRef.current?.focus();
       else if (!parsed.ok) amountRef.current?.focus();
       return;
@@ -122,7 +127,10 @@ function ItemsBody({
       footer={
         <View>
           {removed ? (
-            <View className="mx-4 mt-2 flex-row items-center justify-between rounded-button bg-chip pl-4">
+            <View
+              accessibilityLiveRegion="polite"
+              className="mx-4 mt-2 flex-row items-center justify-between rounded-button bg-chip pl-4"
+            >
               <Text numberOfLines={1} className="flex-1 font-brico-semibold text-body-small text-ink">
                 Removed {removed.item.name}
               </Text>
@@ -314,10 +322,9 @@ function EditSheet({
   const valid = name.trim().length > 0 && parsed.ok && qtyN !== null;
 
   return (
-    <ModalSheet visible={item !== null} onClose={onClose}>
+    <ModalSheet visible={item !== null} onClose={onClose} title="Edit item">
       {item ? (
         <View className="gap-4">
-          <Text className="font-brico-extrabold text-screen-title text-ink">Edit item</Text>
           <Field
             accessibilityLabel="Item name"
             value={name}

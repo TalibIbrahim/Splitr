@@ -8,6 +8,7 @@ import { toPaisa } from '@splitr/calculation-engine';
 import { sizes } from '@splitr/design-tokens';
 import { selectBalances, selectSettleUpPlan, useSplitr } from '../store';
 import { useTheme } from '../theme';
+import { announce, nameLines } from '../lib/a11y';
 import { href } from '../lib/routes';
 import { Button, Money } from '../components/ui';
 import { EmptyState } from '../components/bill';
@@ -33,7 +34,9 @@ export default function BalancesScreen() {
         onPress: () => {
           const r = markSettledWith(key);
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-          setDone(`Marked ${r.billsTouched} ${r.billsTouched === 1 ? 'bill' : 'bills'} paid with ${name}.`);
+          const msg = `Marked ${r.billsTouched} ${r.billsTouched === 1 ? 'bill' : 'bills'} paid with ${name}.`;
+          setDone(msg);
+          announce(msg);
         },
       },
     ]);
@@ -101,7 +104,7 @@ export default function BalancesScreen() {
                     className="flex-row items-center justify-between gap-2 active:opacity-pressed"
                   >
                     <View className="flex-1 gap-1">
-                      <Text numberOfLines={1} className="font-brico-extrabold text-item-name text-ink">
+                      <Text numberOfLines={nameLines()} className="font-brico-extrabold text-item-name text-ink">
                         {c.displayName}
                       </Text>
                       <View className="flex-row items-center gap-1 self-start rounded-pill bg-chip px-2 py-0.5">
@@ -127,7 +130,7 @@ export default function BalancesScreen() {
                             style={{ minHeight: sizes.minTouch }}
                             className="flex-row items-center justify-between gap-2 border-t border-chip active:opacity-pressed"
                           >
-                            <Text numberOfLines={1} className="flex-1 font-brico-semibold text-body-small text-ink">
+                            <Text numberOfLines={nameLines()} className="flex-1 font-brico-semibold text-body-small text-ink">
                               {billName(t.billId)}
                             </Text>
                             <Text className="font-brico-semibold text-meta text-muted">{dir}</Text>

@@ -5,6 +5,7 @@
  */
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { deleteCacheFile } from './receipt-files';
 
 export type CaptureMode = 'scan' | 'camera' | 'library';
 export type CaptureResult =
@@ -29,6 +30,7 @@ async function normalise(uri: string, size: { width: number; height: number } | 
   }
   const ref = await ctx.renderAsync();
   const saved = await ref.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
+  if (saved.uri !== uri) deleteCacheFile(uri); // the original temp source is superseded (D33)
   return saved.uri;
 }
 

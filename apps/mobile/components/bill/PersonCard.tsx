@@ -5,6 +5,7 @@ import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
 import { formatMoney } from '../../lib/format-money';
 import { Money } from '../ui';
+import { nameLines } from '../../lib/a11y';
 
 /** owes: they owe (someone else). paid: already settled up. owe: I owe (my card). */
 export type PersonTag = 'owes' | 'paid' | 'owe';
@@ -41,7 +42,7 @@ export function PersonCard({ name, amount, tag, isMe, selected, onPress }: Perso
         selected ? 'border-ink' : 'border-transparent'
       }`}
     >
-      <Text numberOfLines={1} className={`font-brico-bold text-body-small ${text}`}>
+      <Text numberOfLines={nameLines()} className={`font-brico-bold text-body-small ${text}`}>
         {isMe ? 'You' : name}
       </Text>
       <Money amount={amount} variant="card" onAccent={isMe} />

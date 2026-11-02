@@ -7,7 +7,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { randomUUID } from 'expo-crypto';
 import { useStore } from 'zustand';
 import type { StateStorage } from 'zustand/middleware';
-import { deleteReceiptImage } from '../lib/receipt-files';
+import { deleteReceiptImage, sweepStaleCache } from '../lib/receipt-files';
 import { createSplitrStore, type SplitrState } from './create-store';
 
 // The synchronous kv-store API keeps hydration synchronous, so the first render already knows `hydrated`.
@@ -31,6 +31,9 @@ export const splitrStore = createSplitrStore({
     console.warn('Splitr: could not save', e);
   },
 });
+
+// Stale backup / share-image temp files from earlier sessions (D33).
+sweepStaleCache();
 
 // Receipts of bills deleted more than a day ago (the undo window is long over) are removed from disk.
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;

@@ -40,7 +40,7 @@ export function ReceiptViewer({ uris, visible, onClose }: ReceiptViewerProps) {
 
   return (
     <Modal visible={visible && uri !== null} animationType={reduced ? 'none' : 'fade'} onRequestClose={close} statusBarTranslucent>
-      <View style={themeVars[scheme]} className="flex-1 bg-bg">
+      <View accessibilityViewIsModal style={themeVars[scheme]} className="flex-1 bg-bg">
         <View style={{ paddingTop: insets.top }} className="flex-row items-center justify-between gap-2 px-4">
           <Text accessibilityRole="header" className="flex-1 font-brico-extrabold text-screen-title text-ink">
             {uris.length > 1 ? `Photo ${at + 1} of ${uris.length}` : 'Receipt photo'}

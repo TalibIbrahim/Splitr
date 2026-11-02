@@ -26,6 +26,8 @@ const CONTAINER: Record<ButtonVariant, string> = {
   onHero: 'bg-hero-button border-2 border-hero-button',
   destructive: 'bg-accent border-2 border-accent',
 };
+const DISABLED_CONTAINER = 'bg-chip border-2 border-chip';
+const DISABLED_LABEL = 'text-muted';
 const LABEL: Record<ButtonVariant, string> = {
   primary: 'text-bg',
   outline: 'text-ink',
@@ -33,8 +35,8 @@ const LABEL: Record<ButtonVariant, string> = {
   destructive: 'text-on-accent',
 };
 const SIZE: Record<ButtonSize, string> = {
-  md: 'h-button-md px-5 rounded-button',
-  lg: 'h-button-lg px-6 rounded-button-lg',
+  md: 'min-h-button-md px-5 py-2 rounded-button',
+  lg: 'min-h-button-lg px-6 py-2 rounded-button-lg',
 };
 
 export function Button({
@@ -57,7 +59,7 @@ export function Button({
     onHero: colors.onHeroButton,
     destructive: colors.onAccent,
   } as const;
-  const fg = FG[variant];
+  const fg = disabled ? colors.muted : FG[variant];
 
   return (
     <Pressable
@@ -67,16 +69,16 @@ export function Button({
       disabled={inactive}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-      className={`flex-row items-center justify-center gap-2 active:opacity-pressed ${CONTAINER[variant]} ${SIZE[size]} ${
-        fullWidth ? 'self-stretch' : 'self-start'
-      } ${disabled ? 'opacity-disabled' : ''}`}
+      className={`flex-row items-center justify-center gap-2 active:opacity-pressed ${
+        disabled ? DISABLED_CONTAINER : CONTAINER[variant]
+      } ${SIZE[size]} ${fullWidth ? 'self-stretch' : 'self-start'}`}
     >
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : Icon ? (
         <Icon size={sizes.icon.md} color={fg} strokeWidth={sizes.icon.strokeWidth} />
       ) : null}
-      <Text className={`font-brico-bold text-item-name ${LABEL[variant]}`}>{label}</Text>
+      <Text className={`shrink text-center font-brico-bold text-item-name ${disabled ? DISABLED_LABEL : LABEL[variant]}`}>{label}</Text>
       {badge ? (
         <View className="rounded-pill bg-accent px-2 py-0.5">
           <Text className="font-brico-extrabold text-meta text-on-accent">{badge}</Text>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { toRupeeInputText } from '../../../lib/format-money';
+import { announce } from '../../../lib/a11y';
+import { moneyA11yLabel, toRupeeInputText } from '../../../lib/format-money';
 import { Text, View } from 'react-native';
 import { Check, Info } from 'lucide-react-native';
 import type { Contribution, Paisa } from '@splitr/calculation-engine';
@@ -56,6 +57,16 @@ export function SplitPaymentSheet({ visible, onClose, total, people, initial, on
     rows.map((x) => x.paisa),
   );
 
+  const statusMsg =
+    status.direction === 'done'
+      ? 'Adds up to the total'
+      : `${moneyA11yLabel(status.gap)} ${status.direction === 'left' ? 'remaining' : 'too much'}`;
+  useEffect(() => {
+    if (!visible) return;
+    const t = setTimeout(() => announce(statusMsg), 600);
+    return () => clearTimeout(t);
+  }, [visible, statusMsg]);
+
   const save = (): void => {
     const contributions: Contribution[] = [];
     for (const x of rows) {
@@ -67,8 +78,7 @@ export function SplitPaymentSheet({ visible, onClose, total, people, initial, on
   const StatusIcon = status.direction === 'done' ? Check : Info;
 
   return (
-    <ModalSheet visible={visible} onClose={onClose} closeLabel="Close split payment">
-      <Text className="mb-1 font-brico-extrabold text-screen-title text-ink">Split payment</Text>
+    <ModalSheet visible={visible} onClose={onClose} title="Split payment" closeLabel="Close split payment">
       <View className="mb-3 flex-row items-center gap-2">
         <Text className="font-brico-medium text-body-small text-muted">Bill total</Text>
         <Money amount={total} variant="body" />

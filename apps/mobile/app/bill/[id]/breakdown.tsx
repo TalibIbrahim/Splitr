@@ -5,9 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { FileQuestion, Info, ReceiptText } from 'lucide-react-native';
 import type { BillBreakdown, Paisa } from '@splitr/calculation-engine';
-import { explainParticipant } from '@splitr/bill-domain';
+import { explainParticipant, explainSettled } from '@splitr/bill-domain';
+import type { Bill } from '@splitr/shared-types';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
+import { announce } from '../../../lib/a11y';
 import {
   selectAllOffers,
   selectBill,
@@ -48,6 +50,24 @@ function shortDate(iso: string | null): string | undefined {
   return month && d ? `${Number(d)} ${month}` : undefined;
 }
 
+// D9b: the on-demand recalculation for a settled bill, cached per bill object so re-renders don't re-run the engine.
+const settledExplainCache = new WeakMap<Bill, ReturnType<typeof explainSettled>>();
+function settledExplain(bill: Bill): ReturnType<typeof explainSettled> {
+  let e = settledExplainCache.get(bill);
+  if (!e) {
+    e = explainSettled(bill);
+    settledExplainCache.set(bill, e);
+  }
+  return e;
+}
+
+/** The breakdown whose trace drives the step-by-step: the recalculated one for a settled bill, else the live one. */
+function settledSteps(bill: Bill, breakdown: BillBreakdown, settled: boolean): BillBreakdown {
+  if (!settled) return breakdown;
+  const ex = settledExplain(bill);
+  return ex.kind === 'steps' ? ex.breakdown : breakdown;
+}
+
 export default function BreakdownScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Array.isArray(rawId) ? (rawId[0] ?? '') : (rawId ?? '');
@@ -56,7 +76,8 @@ export default function BreakdownScreen() {
   const insets = useSafeAreaInsets();
 
   const bill = useSplitr(selectBill(id));
-  const result = useSplitr(selectResult(id));
+  // D9b: a settled bill never runs the engine here; its numbers come from finalSnapshot.
+  const result = useSplitr((s) => (selectBill(id)(s)?.status === 'settled' ? undefined : selectResult(id)(s)));
   const billState = useSplitr(selectBillState(id));
   const allOffers = useSplitr(selectAllOffers());
   const notice = useSplitr(selectNotice());
@@ -156,13 +177,16 @@ export default function BreakdownScreen() {
   const markMyPaymentsPaid = (): void => {
     for (const t of myUnpaid) setTransferPaid(id, t.from, t.to, true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    announce("Marked your payments as paid");
   };
 
   const markSettled = (): void => {
     const r = settle(id);
     if (r.ok) {
+      announce('Bill marked settled');
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } else {
+      announce("Can't settle yet. Every payment needs to be marked paid first.");
       Alert.alert("Can't settle yet", 'Every payment needs to be marked paid first.');
     }
   };
@@ -272,11 +296,20 @@ export default function BreakdownScreen() {
 
         {/* How you got there */}
         {selectedShare ? (
-          <HowYouGotThere
-            key={selectedId}
-            total={selectedShare.roundedTotal}
-            lines={explainParticipant(breakdown, bill, selectedId)}
-          />
+          settled && settledExplain(bill).kind === 'snapshot-only' ? (
+            <View className="gap-2">
+              <Money amount={selectedShare.roundedTotal} variant="item" />
+              <Text className="font-brico-medium text-body-small text-muted">
+                Settled with an earlier version of Splitr, so the step-by-step isn't available
+              </Text>
+            </View>
+          ) : (
+            <HowYouGotThere
+              key={selectedId}
+              total={selectedShare.roundedTotal}
+              lines={explainParticipant(settledSteps(bill, breakdown, settled), bill, selectedId)}
+            />
+          )
         ) : null}
 
         {/* Who paid */}

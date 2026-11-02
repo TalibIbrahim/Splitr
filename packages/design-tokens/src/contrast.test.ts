@@ -27,6 +27,7 @@ for (const accent of presets) {
         ['muted on bg', p.muted, p.bg],
         ['muted on surface', p.muted, p.surface],
         ['muted on surface2', p.muted, p.surface2],
+        ['muted on chip (disabled button label)', p.muted, p.chip],
         ['mutedOnInk on ink', p.mutedOnInk, p.ink],
         ['onAccent on accent', p.onAccent, p.accent],
         ['bg on ink (primary button label)', p.bg, p.ink],

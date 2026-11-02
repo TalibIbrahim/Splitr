@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,8 @@ import { Check, ChevronLeft, Download, Info, Lock, Upload } from 'lucide-react-n
 import { sizes } from '@splitr/design-tokens';
 import { exportData, parseBackup, splitrStore, useSplitr } from '../store';
 import { useTheme } from '../theme';
+import { announce } from '../lib/a11y';
+import { deleteCacheFile } from '../lib/receipt-files';
 import { formatBillDate } from '../lib/format-date';
 import { Button, ModalSheet, TextField } from '../components/ui';
 
@@ -42,6 +44,9 @@ export default function SettingsScreen() {
   const lastBackupAt = useSplitr((s) => s.root.meta?.lastBackupAt);
   const [name, setName] = useState(myName);
   const [status, setStatus] = useState<Status>(null);
+  useEffect(() => {
+    if (status) announce(status.text);
+  }, [status]);
   const [busy, setBusy] = useState<'backup' | 'restore' | null>(null);
   const [pending, setPending] = useState<PendingRestore | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
@@ -64,14 +69,19 @@ export default function SettingsScreen() {
       file.create({ overwrite: true });
       await file.write(text);
       if (!(await Sharing.isAvailableAsync())) {
+        deleteCacheFile(file.uri);
         setStatus({ kind: 'error', text: "Sharing isn't available on this device, so the backup wasn't sent anywhere." });
         return;
       }
-      await Sharing.shareAsync(file.uri, {
-        mimeType: 'application/json',
-        UTI: 'public.json',
-        dialogTitle: 'Save your Splitr backup',
-      });
+      try {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/json',
+          UTI: 'public.json',
+          dialogTitle: 'Save your Splitr backup',
+        });
+      } finally {
+        deleteCacheFile(file.uri); // D33: don't leave a copy of all data in the cache
+      }
       splitrStore.getState().setLastBackupAt(new Date().toISOString());
       setStatus({ kind: 'ok', text: 'Backup ready. Keep the file somewhere safe.' });
     } catch {
@@ -222,13 +232,22 @@ export default function SettingsScreen() {
             <View className="flex-row items-center gap-2">
               <Lock size={sizes.icon.sm} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
               <Text className="flex-1 font-brico-semibold text-meta text-muted">
-                Everything stays on this phone. Splitr has no servers.
+                Splitr works entirely on your phone. Your bills, friends' names and card labels (never card numbers) are stored only on this device, and receipts are read by on-device text recognition. No accounts, no analytics, no ads, no tracking — the app has no servers. Nothing leaves your phone unless you share a bill or a backup yourself. Deleting the app erases everything; keep a backup if you want to move phones.
               </Text>
             </View>
             <Text accessibilityLabel={`Version ${version}`} className="font-brico-semibold text-meta text-muted">
               Version {version}
             </Text>
           </View>
+
+          {__DEV__ ? (
+            <Button
+              label="Component gallery (dev)"
+              accessibilityLabel="Open the component gallery, development builds only"
+              variant="outline"
+              onPress={() => router.push('/dev/components')}
+            />
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 

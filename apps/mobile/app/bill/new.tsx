@@ -6,6 +6,7 @@ import { sizes } from '@splitr/design-tokens';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import { selectBill, selectGroups, selectLatestGroup, selectPeople, splitrStore, useSplitr } from '../../store';
+import { announce } from '../../lib/a11y';
 import { isIsoDate, shiftDay, todayIso } from '../../lib/date';
 import { Button } from '../../components/ui';
 import { Field } from '../../components/bill/flow/Field';
@@ -107,7 +108,12 @@ export default function NewBillScreen() {
   syncRef.current = syncScanBill;
 
   const create = () => {
-    if (!canCreate) return;
+    if (!canCreate) {
+      announce(
+        !nameOk ? 'Give the bill a name' : !dateOk ? 'Use the format YYYY-MM-DD for the date' : 'Pick at least one person',
+      );
+      return;
+    }
     let bid = scanBillId.current;
     if (bid) syncScanBill();
     else bid = makeBill();

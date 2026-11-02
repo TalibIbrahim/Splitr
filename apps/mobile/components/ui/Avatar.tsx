@@ -2,6 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import type { Paisa } from '@splitr/calculation-engine';
 import { sizes } from '@splitr/design-tokens';
+import { moneyA11yLabel } from '../../lib/format-money';
 import { Money } from './Money';
 
 export type AvatarSize = keyof typeof sizes.avatar;
@@ -23,6 +24,8 @@ interface AvatarProps {
   /** Light haptic on press (policy: only on assign). */
   haptic?: boolean;
   accessibilityLabel?: string;
+  /** 'radio' when the avatar is an option inside a radiogroup (checked = selected). */
+  role?: 'button' | 'radio';
 }
 
 const INITIAL_TEXT: Record<AvatarSize, string> = {
@@ -63,9 +66,11 @@ export function Avatar({
   onPress,
   haptic,
   accessibilityLabel,
+  role = 'button',
 }: AvatarProps) {
   const { gap, width } = sizes.selectedRing;
-  const label = accessibilityLabel ?? `${name}${isCurrentUser ? ' (you)' : ''}`;
+  const base = `${name}${isCurrentUser ? ' (you)' : ''}`;
+  const label = accessibilityLabel ?? (subtitle !== undefined ? `${base}, ${moneyA11yLabel(subtitle)}` : base);
 
   // Ring box is always rendered (transparent when not selected) so selection never shifts layout.
   const body = (
@@ -94,9 +99,9 @@ export function Avatar({
 
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={role}
       accessibilityLabel={label}
-      accessibilityState={{ selected: !!selected }}
+      accessibilityState={role === 'radio' ? { checked: !!selected } : { selected: !!selected }}
       style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
       className="items-center justify-center active:opacity-pressed"
       onPress={() => {

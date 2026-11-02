@@ -277,9 +277,8 @@ function GuestSheet({
 }) {
   const ref = useRef<TextInputInstance>(null);
   return (
-    <ModalSheet visible={open} onClose={onClose}>
+    <ModalSheet visible={open} onClose={onClose} title="Add a guest">
       <View className="gap-4">
-        <Text className="font-brico-extrabold text-screen-title text-ink">Add a guest</Text>
         <Field
           inputRef={ref}
           accessibilityLabel="Guest name"

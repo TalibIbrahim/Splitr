@@ -13,6 +13,7 @@ import { AmountField, PercentField } from './Field';
 import { Segmented } from './Segmented';
 import { ToggleChip } from './ToggleChip';
 import { rupeesErrorText } from './messages';
+import { nameLines } from '../../../lib/a11y';
 
 export interface SplitPerson {
   id: string;
@@ -63,7 +64,7 @@ const statusText = 'font-brico-bold text-body-small text-ink';
 function PersonRow({ person, children }: { person: SplitPerson; children: ReactNode }) {
   return (
     <View className="flex-row items-start gap-3">
-      <Text numberOfLines={1} style={{ minHeight: sizes.minTouch }} className="flex-1 pt-3 font-brico-bold text-body text-ink">
+      <Text numberOfLines={nameLines()} style={{ minHeight: sizes.minTouch }} className="flex-1 pt-3 font-brico-bold text-body text-ink">
         {person.isCurrentUser ? 'You' : person.name}
       </Text>
       <View className="flex-[1.2]">{children}</View>
@@ -74,7 +75,7 @@ function PersonRow({ person, children }: { person: SplitPerson; children: ReactN
 /** Long-press split editor for one item: Equal / Units / Percent / Amounts with live validation text. */
 export function SplitSheet({ item, people, onClose, onApply }: SplitSheetProps) {
   return (
-    <ModalSheet visible={item !== null} onClose={onClose}>
+    <ModalSheet visible={item !== null} onClose={onClose} title={item ? `Split ${item.name}` : undefined}>
       {item ? <SplitBody key={item.id} item={item} people={people} onClose={onClose} onApply={onApply} /> : null}
     </ModalSheet>
   );
@@ -312,7 +313,6 @@ function SplitBody({
   return (
     <View className="gap-4">
       <View className="gap-1">
-        <Text className="font-brico-extrabold text-screen-title text-ink">Split {item.name}</Text>
         <View className="flex-row items-baseline gap-2">
           <Money amount={item.lineTotal} variant="body" />
           {item.quantity > 1 ? (

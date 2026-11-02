@@ -13,11 +13,13 @@ import {
   useFonts,
 } from '@expo-google-fonts/bricolage-grotesque';
 import { ThemeProvider, useTheme } from '../theme';
+import { useReducedMotion } from '../lib/useReducedMotion';
 
 void SplashScreen.preventAutoHideAsync();
 
 function Shell() {
   const { scheme } = useTheme();
+  const reduced = useReducedMotion();
   const hydrated = useSplitr((s) => s.hydrated);
   const recovery = useSplitr((s) => s.recovery);
   const hasMe = useSplitr((s) => s.root.me !== null);
@@ -26,7 +28,13 @@ function Shell() {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       {hydrated ? (
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: reduced ? 'none' : 'default',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        >
           <Stack.Protected guard={recovery !== null}>
             <Stack.Screen name="recovery" />
           </Stack.Protected>

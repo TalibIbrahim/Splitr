@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { Info } from 'lucide-react-native';
 import { fontFamily, sizes, typeScale } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
+import { announce } from '../../lib/a11y';
 
 interface MoneyInputProps {
   /** Raw text as typed. Parsing (parseRupees) happens in bill-domain, not here. */
@@ -25,6 +27,9 @@ export function MoneyInput({
 }: MoneyInputProps) {
   const { colors } = useTheme();
   const t = typeScale.itemName;
+  useEffect(() => {
+    if (error) announce(error);
+  }, [error]);
   return (
     <View className="gap-1">
       <View
@@ -36,6 +41,7 @@ export function MoneyInput({
         <Text className="font-brico-semibold text-body text-muted">Rs</Text>
         <TextInput
           accessibilityLabel={accessibilityLabel}
+          accessibilityHint={error}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -57,7 +63,7 @@ export function MoneyInput({
         />
       </View>
       {error ? (
-        <View className="flex-row items-center gap-1 px-1">
+        <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1 px-1">
           <Info size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
           <Text className="flex-1 font-brico-bold text-meta text-ink">{error}</Text>
         </View>

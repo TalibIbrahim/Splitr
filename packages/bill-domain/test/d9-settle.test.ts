@@ -1,6 +1,6 @@
 import type { Bill } from '@splitr/shared-types';
 import { describe, expect, it } from 'vitest';
-import { canSettle, reopenBill, settleBill } from '../src/index';
+import { canSettle, explainParticipant, explainSettled, reopenBill, settleBill } from '../src/index';
 import { $, calc, deepFreeze, fixtureB, makeBill, mkItem, okBreakdown, statusesFor } from './helpers';
 
 const NOW = '2026-11-04T12:00:00.000Z';
@@ -52,14 +52,15 @@ describe('D9 canSettle', () => {
 });
 
 describe('D9 settleBill', () => {
-  it('D9 settleBill sets status settled, settledAt and finalSnapshot = breakdown', () => {
+  it('D9 settleBill sets status settled, settledAt and finalSnapshot = breakdown with empty trace (D9b)', () => {
     const b = allPaid();
     const r = calc(b);
     const s = settleBill(b, r, NOW);
     expect(s.status).toBe('settled');
     expect(s.settledAt).toBe(NOW);
-    expect(s.finalSnapshot).toEqual(r.ok ? r.breakdown : null);
-    expect(s.finalSnapshot).toEqual(okBreakdown(b));
+    // Spec change D9b (v1.6): snapshot drops the trace -> { ...breakdown, trace: [] }.
+    expect(s.finalSnapshot).toEqual(r.ok ? { ...r.breakdown, trace: [] } : null);
+    expect(s.finalSnapshot).toEqual({ ...okBreakdown(b), trace: [] });
   });
   it('D9 settleBill keeps every other field', () => {
     const b = allPaid();
@@ -109,5 +110,54 @@ describe('D9 reopenBill', () => {
     expect(o).not.toBe(s);
     expect(s.status).toBe('settled');
     expect(s.finalSnapshot).not.toBeNull();
+  });
+});
+
+describe('D9b explainSettled', () => {
+  const settled = () => {
+    const b = allPaid();
+    return settleBill(b, calc(b), NOW);
+  };
+  const finalOf = (lines: ReturnType<typeof explainParticipant>) => lines.find((l) => l.kind === 'final')?.amount;
+  const tamper = (s: Bill, patch: (p: any) => any): Bill => {
+    const snap = s.finalSnapshot!;
+    const [first, ...rest] = snap.participants;
+    return { ...s, finalSnapshot: { ...snap, participants: [patch(first), ...rest] } } as unknown as Bill;
+  };
+
+  it('D9b settleBill stores a snapshot with an empty trace', () => {
+    expect(settled().finalSnapshot?.trace).toEqual([]);
+  });
+
+  it('D9b explainSettled on Fixture B returns kind steps; totals match the snapshot', () => {
+    const s = settled();
+    const ex = explainSettled(s);
+    expect(ex.kind).toBe('steps');
+    if (ex.kind !== 'steps') return;
+    const snap = s.finalSnapshot!;
+    expect(ex.breakdown.participants.map((p) => [p.participantId, p.exactTotal, p.roundedTotal])).toEqual(
+      snap.participants.map((p) => [p.participantId, p.exactTotal, p.roundedTotal]),
+    );
+    expect(ex.breakdown.trace.length).toBeGreaterThan(0);
+  });
+
+  it('D9b explainParticipant lines from the recalculated breakdown reconcile to the snapshot roundedTotal', () => {
+    const s = settled();
+    const ex = explainSettled(s);
+    expect(ex.kind).toBe('steps');
+    if (ex.kind !== 'steps') return;
+    for (const p of s.finalSnapshot!.participants) {
+      expect(finalOf(explainParticipant(ex.breakdown, s, p.participantId)), p.participantId).toBe(p.roundedTotal);
+    }
+  });
+
+  it('D9b explainSettled returns snapshot-only when a snapshot roundedTotal differs (older engine)', () => {
+    const t = tamper(settled(), (p) => ({ ...p, roundedTotal: p.roundedTotal + 100 }));
+    expect(explainSettled(t).kind).toBe('snapshot-only');
+  });
+
+  it('D9b explainSettled returns snapshot-only when a snapshot exactTotal differs', () => {
+    const t = tamper(settled(), (p) => ({ ...p, exactTotal: p.exactTotal + 1 }));
+    expect(explainSettled(t).kind).toBe('snapshot-only');
   });
 });

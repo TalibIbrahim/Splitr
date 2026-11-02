@@ -4,6 +4,7 @@ import type { Paisa } from '@splitr/calculation-engine';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
 import { formatMoney } from '../../lib/format-money';
+import { announce } from '../../lib/a11y';
 import { Money } from '../ui';
 
 interface TransferRowProps {
@@ -25,10 +26,13 @@ export function TransferRow({ from, to, amount, paid, onTogglePaid }: TransferRo
         <Money amount={amount} variant="meta" />
       </View>
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole="checkbox"
         accessibilityLabel={`${route}, ${formatMoney(amount)}, ${paid ? 'paid. Tap to undo' : 'not paid. Mark paid'}`}
         accessibilityState={{ checked: paid }}
-        onPress={onTogglePaid}
+        onPress={() => {
+          announce(paid ? 'Marked unpaid' : `Marked ${from} → ${to} paid`);
+          onTogglePaid();
+        }}
         style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
         className={`flex-row items-center justify-center gap-1 rounded-pill px-4 active:opacity-pressed ${
           paid ? 'bg-chip' : 'border-2 border-ink'

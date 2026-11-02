@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
+import { announce, useDismissDelay } from '../../lib/a11y';
 
 interface SnackbarProps {
   message: string;
@@ -16,10 +17,14 @@ interface SnackbarProps {
 /** Ink bar pinned to the bottom of its screen: icon + text + one action. */
 export function Snackbar({ message, actionLabel, onAction, onDismiss, durationMs = 5000 }: SnackbarProps) {
   const { colors } = useTheme();
+  const delay = useDismissDelay(durationMs);
   useEffect(() => {
-    const t = setTimeout(onDismiss, durationMs);
+    announce(message);
+  }, [message]);
+  useEffect(() => {
+    const t = setTimeout(onDismiss, delay);
     return () => clearTimeout(t);
-  }, [message, durationMs, onDismiss]);
+  }, [message, delay, onDismiss]);
 
   return (
     <View

@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { href } from '../lib/routes';
-import type { Paisa } from '@splitr/calculation-engine';
-import { selectBill, selectBillState, selectPreview, selectResult, useSplitr } from '../store';
+import { selectBill, selectBillSummary, useSplitr } from '../store';
 import { BillListRow } from './bill';
 import { formatBillDate } from '../lib/format-date';
 
@@ -17,20 +16,18 @@ export function useOpenBill(): (id: string, state: string | undefined) => void {
 /** A BillListRow fed entirely from store selectors. */
 export function ConnectedBillRow({ billId, onLongPress }: { billId: string; onLongPress?: () => void }) {
   const bill = useSplitr(selectBill(billId));
-  const state = useSplitr(selectBillState(billId));
-  const result = useSplitr(selectResult(billId));
-  const preview = useSplitr(selectPreview(billId));
+  const summary = useSplitr(selectBillSummary(billId));
   const open = useOpenBill();
-  if (!bill || !state) return null;
+  if (!bill || !summary) return null;
 
-  const total: Paisa | undefined = result?.ok ? result.breakdown.roundedTotal : undefined;
-  const left = state === 'unassigned' && preview && preview.needsAttentionCount > 0 ? `${preview.needsAttentionCount} left` : undefined;
+  const { state, roundedTotal: total } = summary;
+  const left = state === 'unassigned' && summary.needsAttentionCount > 0 ? `${summary.needsAttentionCount} left` : undefined;
 
   return (
     <BillListRow
       restaurant={bill.restaurantName || 'Untitled bill'}
       date={formatBillDate(bill.date)}
-      {...(total !== undefined ? { total } : {})}
+      {...(total !== null ? { total } : {})}
       state={state}
       stateDetail={left}
       onPress={() => open(billId, state)}

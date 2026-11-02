@@ -11,6 +11,7 @@ import type { BillBreakdown, Paisa } from '@splitr/calculation-engine';
 import type { Bill } from '@splitr/shared-types';
 import { formatBillDate } from './format-date';
 import { isTransferMarkedPaid } from './payments';
+import { deleteCacheFile } from './receipt-files';
 import { shareBill } from './share';
 
 /** Output image size in pixels (4:5). */
@@ -62,9 +63,10 @@ export async function shareBillImage(
   bill: Bill,
   breakdown: BillBreakdown,
 ): Promise<void> {
+  let uri: string | null = null;
   try {
     if (!cardRef.current || !(await Sharing.isAvailableAsync())) throw new Error('image sharing unavailable');
-    const uri = await captureRef(cardRef, {
+    uri = await captureRef(cardRef, {
       format: 'png',
       quality: 1,
       result: 'tmpfile',
@@ -78,5 +80,7 @@ export async function shareBillImage(
     });
   } catch {
     await shareBill(bill, breakdown);
+  } finally {
+    if (uri) deleteCacheFile(uri);
   }
 }

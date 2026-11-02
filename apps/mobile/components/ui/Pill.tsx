@@ -17,6 +17,7 @@ export function Pill(props: PillProps) {
   return (
     <View
       accessible
+      accessibilityRole="text"
       accessibilityLabel={label}
       className={`flex-row items-center gap-1 self-start rounded-pill px-3 py-1 ${
         accent ? 'bg-accent' : 'bg-chip'

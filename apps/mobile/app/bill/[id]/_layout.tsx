@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
+import { useReducedMotion } from '../../../lib/useReducedMotion';
 import { StepHeader, type BillStep } from '../../../components/bill';
 import { BillNotFound, useBillRoute } from '../../../components/bill/flow/BillGate';
 import { HOME_HREF, billHref } from '../../../components/bill/flow/nav';
@@ -26,6 +27,7 @@ function stepFor(segment: string | undefined): BillStep {
 export default function BillLayout() {
   const router = useRouter();
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
   const segments = useSegments() as string[];
   const last = segments[segments.length - 1];
   const { id, bill } = useBillRoute();
@@ -44,7 +46,9 @@ export default function BillLayout() {
     return <Redirect href={billHref(id, 'breakdown')} />;
   }
 
-  const stack = <Stack screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 150 }} />;
+  const stack = (
+    <Stack screenOptions={{ headerShown: false, animation: reduced ? 'none' : 'fade', animationDuration: 150 }} />
+  );
   if (bill.status === 'settled') return stack;
 
   return (
@@ -59,7 +63,7 @@ export default function BillLayout() {
         >
           <X size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
         </Pressable>
-        <Text numberOfLines={1} className="flex-1 font-brico-extrabold text-screen-title text-ink">
+        <Text accessibilityRole="header" numberOfLines={1} className="flex-1 font-brico-extrabold text-screen-title text-ink">
           {bill.restaurantName.trim() || 'New bill'}
         </Text>
       </View>

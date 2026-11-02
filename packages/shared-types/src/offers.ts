@@ -11,7 +11,10 @@ export const CardOfferDiscountSchema = z.discriminatedUnion('type', [
 export const CardOfferSourceSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('published'),
-    url: z.string(),
+    url: z
+      .string()
+      .url()
+      .refine((u) => u.startsWith('https://'), 'source url must be https'),
     title: z.string(),
     retrievedOn: IsoDateSchema,
     confidence: z.enum(['high', 'medium']),

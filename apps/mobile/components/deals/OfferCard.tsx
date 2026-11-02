@@ -63,7 +63,7 @@ export function OfferCard({ offer, status, stale, onRemove }: OfferCardProps) {
       </View>
 
       <View className="flex-row flex-wrap gap-2 pt-1">
-        {published ? (
+        {published?.url.startsWith('https://') ? (
           <Pressable
             accessibilityRole="link"
             accessibilityLabel={`Open source for ${offer.bank} at ${offer.restaurant}`}

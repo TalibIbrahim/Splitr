@@ -1,8 +1,10 @@
 import type { Ref } from 'react';
+import { useEffect } from 'react';
 import { Text, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 import { Info } from 'lucide-react-native';
 import { fontFamily, sizes, typeScale } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
+import { announce } from '../../../lib/a11y';
 
 interface FieldProps
   extends Pick<
@@ -47,6 +49,9 @@ export function Field({
 }: FieldProps) {
   const { colors } = useTheme();
   const t = typeScale.itemName;
+  useEffect(() => {
+    if (error) announce(error);
+  }, [error]);
   return (
     <View className={compact ? 'gap-1' : 'flex-1 gap-1'}>
       <View
@@ -59,6 +64,7 @@ export function Field({
         <TextInput
           ref={inputRef}
           accessibilityLabel={accessibilityLabel}
+          accessibilityHint={error}
           placeholderTextColor={colors.muted}
           selectionColor={colors.ink}
           textAlign={align}
@@ -76,7 +82,7 @@ export function Field({
         {suffix ? <Text className="font-brico-semibold text-body text-muted">{suffix}</Text> : null}
       </View>
       {error ? (
-        <View className="flex-row items-center gap-1 px-1">
+        <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1 px-1">
           <Info size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
           <Text className="flex-1 font-brico-bold text-meta text-ink">{error}</Text>
         </View>

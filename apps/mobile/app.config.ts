@@ -17,6 +17,7 @@ const config: ExpoConfig = {
     icon: './assets/expo.icon',
     infoPlist: {
       LSApplicationQueriesSchemes: ['whatsapp'],
+      NSAppTransportSecurity: { NSAllowsArbitraryLoads: false },
     },
   },
   android: {
@@ -29,6 +30,15 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // D30: no Google auto-backup of local data. D31: release builds also drop INTERNET.
+    allowBackup: false,
+    blockedPermissions: [
+      'android.permission.RECORD_AUDIO',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      ...(process.env.SPLITR_RELEASE === '1' ? ['android.permission.INTERNET'] : []),
+    ],
   },
   web: {
     output: 'server',

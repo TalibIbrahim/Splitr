@@ -6,6 +6,7 @@ import { useTheme } from '../../theme';
 import { formatMoney } from '../../lib/format-money';
 import { Money } from '../ui';
 import { StatePill, type BillStateView } from './StatePill';
+import { nameLines } from '../../lib/a11y';
 
 interface BillListRowProps {
   restaurant: string;
@@ -32,7 +33,7 @@ export function BillListRow({ restaurant, date, total, state, stateDetail, onPre
       className="flex-row items-center gap-3 py-3 active:opacity-pressed"
     >
       <View className="flex-1 gap-1">
-        <Text numberOfLines={1} className="font-brico-bold text-item-name text-ink">
+        <Text numberOfLines={nameLines()} className="font-brico-bold text-item-name text-ink">
           {restaurant}
         </Text>
         <Text className="font-brico-semibold text-meta text-muted">{date}</Text>

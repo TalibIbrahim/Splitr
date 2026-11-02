@@ -28,7 +28,7 @@ export {
   type SettleUpEntry,
   type SettleUpTransfer,
 } from './transfers';
-export { canSettle, settleBill, reopenBill } from './settle';
+export { canSettle, settleBill, reopenBill, explainSettled } from './settle';
 export { shareSummary } from './share';
 export { draftToBillPatch, type BillPatch } from './draft';
 export {

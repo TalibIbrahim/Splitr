@@ -50,7 +50,7 @@ export function Money({ amount, variant = 'body', showSign, onInk, onHero, onAcc
       opacity.setValue(1);
       return;
     }
-    opacity.setValue(0.25);
+    opacity.setValue(0.6);
     Animated.timing(opacity, {
       toValue: 1,
       duration: motion.duration.base,
