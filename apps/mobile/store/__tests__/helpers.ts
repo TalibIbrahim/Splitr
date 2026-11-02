@@ -60,7 +60,16 @@ export interface Env {
 
 export const T0 = Date.UTC(2026, 10, 2, 10, 0, 0);
 
-export function makeEnv(opts: { storage?: MemoryStorage; async?: boolean; start?: number; idPrefix?: string } = {}): Env {
+export function makeEnv(
+  opts: {
+    storage?: MemoryStorage;
+    async?: boolean;
+    start?: number;
+    idPrefix?: string;
+    /** Phase 2 (docs/phase2-spec.md 6.1): optional injected file-deletion effect. */
+    deleteReceiptFile?: (uri: string) => void;
+  } = {},
+): Env {
   const storage = opts.storage ?? new MemoryStorage(opts.async ?? false);
   let t = opts.start ?? T0;
   let n = 0;
@@ -71,7 +80,12 @@ export function makeEnv(opts: { storage?: MemoryStorage; async?: boolean; start?
     ids.push(id);
     return id;
   };
-  const store = createSplitrStore({ storage, newId, now });
+  const store = createSplitrStore({
+    storage,
+    newId,
+    now,
+    ...(opts.deleteReceiptFile ? { deleteReceiptFile: opts.deleteReceiptFile } : {}),
+  });
   return {
     storage,
     store,

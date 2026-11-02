@@ -10,6 +10,7 @@ import {
   ItemSchema,
   PaisaSchema,
 } from './engine';
+import { ReceiptDraftSchema } from './receipt';
 
 /** ISO-8601 UTC timestamp. */
 const TimestampSchema = z.iso.datetime();
@@ -78,6 +79,16 @@ export const BillSchema = z.object({
   status: z.enum(['open', 'settled']),
   settledAt: TimestampSchema.nullable(),
   finalSnapshot: BillBreakdownSchema.nullable(),
+  /** Phase 2: the scanned receipt image (device-local) and its parsed draft. Optional, so no schema bump. */
+  receipt: z
+    .object({
+      imageUri: z.string(),
+      /** Extra photos added by "Scan more"; `imageUri` stays the first one. */
+      moreImageUris: z.array(z.string()).optional(),
+      scannedAt: TimestampSchema,
+      draft: ReceiptDraftSchema.nullable(),
+    })
+    .optional(),
   ...documentFields,
 });
 export type Bill = z.infer<typeof BillSchema>;

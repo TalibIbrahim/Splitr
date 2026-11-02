@@ -1,0 +1,236 @@
+name: Release
+
+# Tag `vX.Y.Z` (or run manually) -> build APK + unsigned IPA -> GitHub Release.
+# Pushes to `ci/release-test` build both artifacts only (no release) to validate the pipeline.
+on:
+  push:
+    tags: ['v*']
+    branches: [ci/release-test]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build and publish (no leading v)'
+        required: true
+        default: '0.0.0-manual'
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app_version: ${{ steps.v.outputs.app_version }}
+    steps:
+      - name: Derive version
+        id: v
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            VERSION="${REF_NAME#v}"
+          elif [ "$EVENT" = "workflow_dispatch" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="0.0.0-test"
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$VERSION' is not a valid semver version"
+            exit 1
+          fi
+          echo "app_version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version $VERSION"
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Test (a broken build never ships)
+        run: pnpm test
+
+  android:
+    needs: [version, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      ANDROID_VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/mobile/app.config.ts') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            KS="$RUNNER_TEMP/splitr-release.keystore"
+            printf '%s' "$KEYSTORE_B64" | base64 --decode > "$KS"
+            {
+              echo "SPLITR_KEYSTORE_PATH=$KS"
+              echo "SPLITR_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "SPLITR_KEY_ALIAS=$KEY_ALIAS"
+              echo "SPLITR_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "Release keystore configured."
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set: signing the APK with the DEBUG key. Updates will not install over a differently-signed build."
+          fi
+
+      - name: Expo prebuild (android)
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Assemble release APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Name APK
+        run: |
+          mkdir -p dist
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "dist/splitr-${APP_VERSION}.apk"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: dist/splitr-*.apk
+          if-no-files-found: error
+
+  ios:
+    needs: [version, test]
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      IOS_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Expo prebuild (ios)
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install pods
+        working-directory: apps/mobile/ios
+        run: pod install
+
+      - name: Build (unsigned)
+        working-directory: apps/mobile/ios
+        run: |
+          set -eo pipefail
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          set -eo pipefail
+          APP=$(ls -d apps/mobile/ios/build/Build/Products/Release-iphoneos/*.app | head -n 1)
+          echo "Packaging $APP"
+          rm -rf Payload && mkdir -p Payload dist
+          cp -R "$APP" Payload/
+          zip -qry "dist/splitr-${APP_VERSION}-unsigned.ipa" Payload
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-ipa
+          path: dist/splitr-*-unsigned.ipa
+          if-no-files-found: error
+
+  release:
+    # Only for tags and manual runs; branch pushes (ci/release-test) stop after the builds.
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    needs: [version, android, ios]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: |
+          sha256sum splitr-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Release notes
+        run: |
+          cat > notes.md <<'NOTES'
+          ## Install
+
+          **Android:** Download the APK, allow installs from your browser, install. Updates install over the old version only if signed with the same key.
+
+          **iPhone:** Unsigned IPA: install with Sideloadly or AltStore using your Apple ID; free Apple IDs must re-sign every 7 days.
+
+          Verify downloads against `SHA256SUMS.txt`.
+          NOTES
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: Splitr ${{ env.APP_VERSION }}
+          body_path: notes.md
+          prerelease: ${{ contains(env.APP_VERSION, '-') }}
+          files: |
+            dist/splitr-*.apk
+            dist/splitr-*-unsigned.ipa
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true

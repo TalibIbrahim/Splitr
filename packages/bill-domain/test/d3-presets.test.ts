@@ -22,25 +22,26 @@ function rebuild(id: string, order: number, d: PresetDescription): Adjustment | 
     case 'cardDiscount':
       return cardDiscount(id, order, {
         rateBp: d.rateBp,
+        ...(d.printedAmount !== undefined ? { printedAmount: d.printedAmount } : {}),
         ...(d.capPaisa !== undefined ? { capPaisa: d.capPaisa } : {}),
         label: d.label,
       });
     case 'tax':
-      return tax(id, order, { rateBp: d.rateBp, base: d.base, label: d.label });
+      return tax(id, order, { rateBp: d.rateBp, base: d.base, label: d.label, ...(d.printedAmount !== undefined ? { printedAmount: d.printedAmount } : {}), });
     case 'serviceCharge':
-      return serviceCharge(id, order, { rateBp: d.rateBp, label: d.label });
+      return serviceCharge(id, order, { rateBp: d.rateBp, label: d.label, ...(d.printedAmount !== undefined ? { printedAmount: d.printedAmount } : {}), });
     case 'tip':
-      return tip(id, order, { amount: d.amount, split: d.split });
+      return tip(id, order, { amount: d.amount, split: d.split, ...(d.printedAmount !== undefined ? { printedAmount: d.printedAmount } : {}), });
     case 'fee':
-      return fee(id, order, { amount: d.amount, label: d.label });
+      return fee(id, order, { amount: d.amount, label: d.label, ...(d.printedAmount !== undefined ? { printedAmount: d.printedAmount } : {}), });
     case 'custom':
       return null;
   }
 }
 
 describe('D3 presets', () => {
-  it('D3 defaultOrders are discount 10, service 20, tax 30, tip 40, fee 50', () => {
-    expect(defaultOrders).toEqual({ discount: 10, serviceCharge: 20, tax: 30, tip: 40, fee: 50 });
+  it('D3 defaultOrders are discount 10, tax 30, service 35 (phase2 v1.1), tip 40, fee 50', () => {
+    expect(defaultOrders).toEqual({ discount: 10, serviceCharge: 35, tax: 30, tip: 40, fee: 50 });
   });
 
   describe('builders', () => {
@@ -164,6 +165,49 @@ describe('D3 presets', () => {
       );
     });
 
+    it('D3a every builder accepts printedAmount; describeAdjustment ignores it for matching and returns it; rebuild is identical', () => {
+      const pr = $(12345);
+      const built: Adjustment[] = [
+        cardDiscount('x', 10, { rateBp: bp(2000), printedAmount: pr }),
+        tax('x', 30, { rateBp: bp(1600), base: 'original', printedAmount: pr }),
+        tax('x', 30, { rateBp: bp(1600), base: 'after-discounts', printedAmount: pr }),
+        serviceCharge('x', 35, { rateBp: bp(1000), printedAmount: pr }),
+        tip('x', 40, { amount: $(5000), split: 'proportional', printedAmount: pr }),
+        fee('x', 50, { amount: $(700), label: 'Packing', printedAmount: pr }),
+      ];
+      for (const adj of built) {
+        expect(adj.printedAmount).toBe(pr);
+        const d = describeAdjustment(adj);
+        expect(d.kind).not.toBe('custom');
+        expect((d as { printedAmount?: number }).printedAmount).toBe(pr);
+        expect(rebuild(adj.id, adj.order, d)).toEqual(adj);
+      }
+    });
+
+    it('D3a without printedAmount the description has none and builders add none', () => {
+      const a = tax('x', 30, { rateBp: bp(500), base: 'original' });
+      expect(a.printedAmount).toBeUndefined();
+      expect((describeAdjustment(a) as { printedAmount?: number }).printedAmount).toBeUndefined();
+    });
+
+    it('D3a property: printedAmount round-trips for all five presets', () => {
+      fc.assert(
+        fc.property(fc.integer({ min: 0, max: 100_000_000 }), fc.integer({ min: 0, max: 10000 }), (m, r) => {
+          const pr = $(m);
+          for (const adj of [
+            cardDiscount('x', 10, { rateBp: bp(r), printedAmount: pr }),
+            tax('x', 30, { rateBp: bp(r), base: 'after-discounts', printedAmount: pr }),
+            serviceCharge('x', 35, { rateBp: bp(r), printedAmount: pr }),
+            tip('x', 40, { amount: $(m), split: 'equal', printedAmount: pr }),
+            fee('x', 50, { amount: $(m), label: 'F', printedAmount: pr }),
+          ]) {
+            expect(rebuild(adj.id, adj.order, describeAdjustment(adj))).toEqual(adj);
+          }
+        }),
+        { numRuns: 100 },
+      );
+    });
+
     const customs: [string, Adjustment][] = [
       ['kind custom', { ...fee('c', 50, { amount: $(100), label: 'X' }), kind: 'custom', direction: 'add' }],
       ['discount with eligibility', { ...cardDiscount('d', 10, { rateBp: bp(2000) }), eligibility: { categories: ['food'] } }],
@@ -175,7 +219,6 @@ describe('D3 presets', () => {
       ['tax with rounding mode down', { ...tax('t', 30, { rateBp: bp(500), base: 'original' }), rounding: 'down' }],
       ['tax with a fixed taxable amount', { ...tax('t', 30, { rateBp: bp(500), base: 'original' }), base: { type: 'fixed', amount: $(1000) } }],
       ['tax after discounts naming one id', { ...tax('t', 30, { rateBp: bp(500), base: 'original' }), base: { type: 'items-after', include: ['d'] } }],
-      ['tax with printedAmount', { ...tax('t', 30, { rateBp: bp(500), base: 'original' }), printedAmount: $(50000) }],
       ['service charge with equal allocation', { ...serviceCharge('s', 20, { rateBp: bp(1000) }), allocation: { type: 'equal' } }],
       ['tip with weights allocation', { ...tip('p', 40, { amount: $(5000), split: 'equal' }), allocation: { type: 'weights', entries: [{ participantId: 'a', weight: 1 }] } }],
       ['tip equal limited to some participants', { ...tip('p', 40, { amount: $(5000), split: 'equal' }), allocation: { type: 'equal', participantIds: ['a'] } }],

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextInputInstance } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Receipt, Trash2 } from 'lucide-react-native';
+import { ChevronRight, Plus, Receipt, ScanLine, Trash2 } from 'lucide-react-native';
 import type { Item } from '@splitr/calculation-engine';
 import { parseRupees } from '@splitr/bill-domain';
 import { sizes } from '@splitr/design-tokens';
@@ -16,22 +16,26 @@ import { FlowScreen } from '../../../components/bill/flow/FlowScreen';
 import { QtyControl } from '../../../components/bill/flow/QtyControl';
 import { BillNotFound, useBillRoute } from '../../../components/bill/flow/BillGate';
 import { billHref } from '../../../components/bill/flow/nav';
+import { ScanStatus } from '../../../components/bill/flow/ScanStatus';
+import { useReceiptScan } from '../../../components/bill/flow/useReceiptScan';
 import { rupeesErrorText } from '../../../components/bill/flow/messages';
 
 export default function ItemsScreen() {
   const { id, bill } = useBillRoute();
   if (!bill) return <BillNotFound />;
-  return <ItemsBody id={id} items={bill.items} printedTotal={bill.printedTotal} />;
+  return <ItemsBody id={id} items={bill.items} printedTotal={bill.printedTotal} hasDraft={!!bill.receipt?.draft} />;
 }
 
 function ItemsBody({
   id,
   items,
   printedTotal,
+  hasDraft,
 }: {
   id: string;
   items: readonly Item[];
   printedTotal: Item['lineTotal'] | undefined;
+  hasDraft: boolean;
 }) {
   const router = useRouter();
   const { colors } = useTheme();
@@ -87,6 +91,10 @@ function ItemsBody({
     setRemoved(null);
   };
 
+  const ensureBill = useCallback(() => id, [id]);
+  const onScanned = useCallback(() => router.push(billHref(id, 'review')), [router, id]);
+  const scan = useReceiptScan({ ensureBill, onDone: onScanned });
+
   const receiptParsed = parseRupees(receiptText);
   const receiptError =
     receiptText.trim() !== '' && !receiptParsed.ok ? rupeesErrorText(receiptParsed.reason) : undefined;
@@ -96,6 +104,18 @@ function ItemsBody({
     if (t.trim() === '') act().updateBillMeta(id, { printedTotal: null });
     else if (r.ok) act().updateBillMeta(id, { printedTotal: r.paisa });
   };
+
+  if (scan.state.kind !== 'idle') {
+    return (
+      <ScanStatus
+        state={scan.state}
+        onRetry={() => void scan.retry()}
+        onStart={(m) => void scan.start(m)}
+        onTypeItIn={scan.reset}
+        onBack={scan.reset}
+      />
+    );
+  }
 
   return (
     <FlowScreen
@@ -131,6 +151,23 @@ function ItemsBody({
         contentContainerClassName="gap-4 px-4 pb-6 pt-3"
         showsVerticalScrollIndicator={false}
       >
+        {hasDraft ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Review scan, check the items read from the receipt"
+            onPress={() => router.push(billHref(id, 'review'))}
+            style={{ minHeight: sizes.minTouch }}
+            className="flex-row items-center gap-3 rounded-card border-2 border-ink bg-bg px-4 py-3 active:opacity-pressed"
+          >
+            <ScanLine size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
+            <View className="flex-1">
+              <Text className="font-brico-extrabold text-item-name text-ink">Review scan</Text>
+              <Text className="font-brico-medium text-body-small text-muted">Check what was read from the receipt</Text>
+            </View>
+            <ChevronRight size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
+          </Pressable>
+        ) : null}
+
         <Card tone="surface2" className="flex-row items-center justify-between">
           <View>
             <Text className="font-brico-semibold text-meta text-muted">Items subtotal</Text>
@@ -140,6 +177,15 @@ function ItemsBody({
           </View>
           <Money amount={sumLineTotals(items)} variant="card" />
         </Card>
+
+        <Button
+          label="Scan more"
+          accessibilityLabel="Scan more of the receipt"
+          icon={ScanLine}
+          variant="outline"
+          fullWidth
+          onPress={() => void scan.start('scan')}
+        />
 
         <View className="gap-3">
           <Field

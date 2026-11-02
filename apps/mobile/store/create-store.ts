@@ -13,9 +13,10 @@ import {
   reopenBill,
   settleBill,
   toBillInput,
+  type BillPatch,
   toggleParticipant,
 } from '@splitr/bill-domain';
-import type { Bill, BillParticipant, Group, PersistedRoot, Person } from '@splitr/shared-types';
+import type { Bill, BillParticipant, Group, PersistedRoot, Person, ReceiptDraft } from '@splitr/shared-types';
 import { createSaver, emptyRoot, loadRoot, type LoadOutcome, type Saver } from './persist';
 
 export interface SplitrDeps {
@@ -26,6 +27,11 @@ export interface SplitrDeps {
   /** Debounce for writes. 0 (default) writes synchronously after every change. The app uses 300. */
   saveDelayMs?: number;
   onSaveError?: (e: unknown) => void;
+  /**
+   * Injected effect (spec 6.1): removes a stored receipt image. Called by `purgeDeletedReceipts` once a deleted
+   * bill's undo window has passed. Not called on `confirmRecovery` (the discarded state is the corrupt one).
+   */
+  deleteReceiptFile?: (uri: string) => void;
 }
 
 export type SplitrNotice = { kind: 'payments-reset'; billId: string; count: number };
@@ -72,6 +78,14 @@ export interface RemovedItem {
   transferStatusesBefore: Bill['transferStatuses'];
 }
 
+export interface ApplyDraftOptions {
+  /** true: items = patch.items; false: patch items are appended. */
+  replaceItems: boolean;
+  /** Applied only when passed (the UI decides after asking). */
+  restaurantName?: string;
+  date?: string;
+}
+
 export type SettleResult = { ok: true } | { ok: false; reason: string };
 
 export interface SplitrActions {
@@ -97,6 +111,15 @@ export interface SplitrActions {
   setTransferPaid(id: string, from: string, to: string, paid: boolean): void;
   settle(id: string): SettleResult;
   reopen(id: string): void;
+  /** Sets `bill.receipt = { imageUri, scannedAt: now(), draft }`. */
+  attachReceipt(billId: string, r: { imageUri: string; draft: ReceiptDraft | null }): void;
+  /** Applies a draft patch (from `draftToBillPatch`) to an open bill; see docs/phase2-spec.md 6.1. */
+  applyDraft(billId: string, patch: BillPatch, opts: ApplyDraftOptions): void;
+  /**
+   * Removes the receipt of every bill deleted before `olderThanIso` (calling `deps.deleteReceiptFile`),
+   * so the image is gone once the undo window has passed.
+   */
+  purgeDeletedReceipts(olderThanIso: string): void;
   deleteBill(id: string): void;
   restoreBill(id: string): void;
   /** Accept the empty state after a failed hydration; overwrites the stored value. */
@@ -523,6 +546,77 @@ export function createSplitrStore(deps: SplitrDeps): SplitrStore {
         const bill = get().root.bills.find((b) => b.id === id);
         if (!bill || bill.status !== 'settled' || !isLive(bill)) return;
         commit(id, withReconciledTransfers({ ...reopenBill(bill), updatedAt: now() }));
+      },
+
+      attachReceipt(billId, r) {
+        mutateBill(billId, (bill) => {
+          const prev = bill.receipt;
+          // A different uri than the first one is an extra photo ("Scan more"): keep the first, append the new one.
+          if (prev && prev.imageUri !== r.imageUri) {
+            const more = prev.moreImageUris ?? [];
+            const moreImageUris = more.includes(r.imageUri) ? more : [...more, r.imageUri];
+            return { ...bill, receipt: { ...prev, moreImageUris, scannedAt: now(), draft: r.draft } };
+          }
+          return {
+            ...bill,
+            receipt: { ...(prev?.moreImageUris ? { moreImageUris: prev.moreImageUris } : {}), imageUri: r.imageUri, scannedAt: now(), draft: r.draft },
+          };
+        });
+      },
+
+      applyDraft(billId, patch, opts) {
+        mutateBill(billId, (bill) => {
+          // For each replaceable kind present in the patch, every existing adjustment of that kind goes
+          // (rate or fixed). Fees and customs are always kept.
+          const REPLACEABLE: ReadonlySet<Adjustment['kind']> = new Set(['discount', 'tax', 'serviceCharge', 'tip']);
+          const replaced = new Set(patch.adjustments.map((x) => x.kind).filter((k) => REPLACEABLE.has(k)));
+          const removedIds = new Set(bill.adjustments.filter((x) => replaced.has(x.kind)).map((x) => x.id));
+          // Remaining adjustments must not keep dangling `items-after` references to the removed ones.
+          const kept = bill.adjustments
+            .filter((x) => !replaced.has(x.kind))
+            .map((x): Adjustment => {
+              const base = x.base;
+              if (!base || base.type !== 'items-after' || base.include === 'all-prior') return x;
+              if (!base.include.some((id) => removedIds.has(id))) return x;
+              const include = base.include.filter((id) => !removedIds.has(id));
+              return { ...x, base: include.length === 0 ? { type: 'items' } : { type: 'items-after', include } };
+            });
+          const adjustments = [...kept, ...patch.adjustments];
+          return {
+            ...bill,
+            items: opts.replaceItems ? patch.items : [...bill.items, ...patch.items],
+            adjustments,
+            ...(patch.printedSubtotal !== undefined ? { printedSubtotal: patch.printedSubtotal } : {}),
+            ...(patch.printedTotal !== undefined ? { printedTotal: patch.printedTotal } : {}),
+            ...(opts.restaurantName !== undefined ? { restaurantName: opts.restaurantName } : {}),
+            ...(opts.date !== undefined ? { date: opts.date } : {}),
+          };
+        });
+      },
+
+      purgeDeletedReceipts(olderThanIso) {
+        const stale = (b: Bill): boolean => b.receipt !== undefined && b.deletedAt != null && b.deletedAt < olderThanIso;
+        if (!get().root.bills.some(stale)) return;
+        for (const b of get().root.bills) {
+          if (stale(b) && b.receipt) {
+            for (const uri of [b.receipt.imageUri, ...(b.receipt.moreImageUris ?? [])]) {
+              try {
+                deps.deleteReceiptFile?.(uri);
+              } catch {
+                // a missing file must not block the purge
+              }
+            }
+          }
+        }
+        setRoot((r) => ({
+          ...r,
+          bills: r.bills.map((b) => {
+            if (!stale(b)) return b;
+            const { receipt: _receipt, ...rest } = b;
+            void _receipt;
+            return rest;
+          }),
+        }));
       },
 
       deleteBill(id) {

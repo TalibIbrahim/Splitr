@@ -7,6 +7,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { randomUUID } from 'expo-crypto';
 import { useStore } from 'zustand';
 import type { StateStorage } from 'zustand/middleware';
+import { deleteReceiptImage } from '../lib/receipt-files';
 import { createSplitrStore, type SplitrState } from './create-store';
 
 // The synchronous kv-store API keeps hydration synchronous, so the first render already knows `hydrated`.
@@ -25,10 +26,17 @@ export const splitrStore = createSplitrStore({
   newId: randomUUID,
   now: () => new Date().toISOString(),
   saveDelayMs: 300,
+  deleteReceiptFile: deleteReceiptImage,
   onSaveError: (e) => {
     console.warn('Splitr: could not save', e);
   },
 });
+
+// Receipts of bills deleted more than a day ago (the undo window is long over) are removed from disk.
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+if (splitrStore.getState().hydrated && !splitrStore.getState().recovery) {
+  splitrStore.getState().purgeDeletedReceipts(new Date(Date.now() - ONE_DAY_MS).toISOString());
+}
 
 // Flush a pending debounced write as soon as the app is backgrounded.
 AppState.addEventListener('change', (status) => {
@@ -40,4 +48,4 @@ export function useSplitr<T>(selector: (state: SplitrState) => T): T {
 }
 
 export * from './selectors';
-export type { SplitrState, RemovedItem } from './create-store';
+export type { SplitrState, RemovedItem, ApplyDraftOptions } from './create-store';

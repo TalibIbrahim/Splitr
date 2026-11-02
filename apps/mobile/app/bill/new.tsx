@@ -1,17 +1,19 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextInputInstance } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Minus, Plus, UserPlus, X } from 'lucide-react-native';
+import { Image as ImageIcon, Minus, Plus, ScanLine, UserPlus, X } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
-import { selectGroups, selectLatestGroup, selectPeople, splitrStore, useSplitr } from '../../store';
+import { selectBill, selectGroups, selectLatestGroup, selectPeople, splitrStore, useSplitr } from '../../store';
 import { isIsoDate, shiftDay, todayIso } from '../../lib/date';
-import { Button, StickyAction } from '../../components/ui';
+import { Button } from '../../components/ui';
 import { Field } from '../../components/bill/flow/Field';
 import { FlowScreen } from '../../components/bill/flow/FlowScreen';
 import { ToggleChip } from '../../components/bill/flow/ToggleChip';
 import { HOME_HREF, billHref } from '../../components/bill/flow/nav';
+import { ScanStatus } from '../../components/bill/flow/ScanStatus';
+import { useReceiptScan } from '../../components/bill/flow/useReceiptScan';
 
 
 function SectionTitle({ children }: { children: string }) {
@@ -67,25 +69,106 @@ export default function NewBillScreen() {
     guestRef.current?.focus();
   };
 
-  const create = () => {
-    if (!canCreate) return;
-    const id = splitrStore.getState().createBill({
+  const makeBill = () =>
+    splitrStore.getState().createBill({
       groupId,
       restaurantName: name.trim(),
       date,
       participantPersonIds: picked,
       guests,
     });
-    router.replace(billHref(id, 'items'));
+
+  // A scan creates its bill once a photo exists (so a cancelled capture leaves nothing behind). That bill is
+  // reused by every later action here, after catching it up with whatever was edited on this form since.
+  const scanBillId = useRef<string | null>(null);
+  const handedOff = useRef(false);
+
+  const syncScanBill = () => {
+    const bid = scanBillId.current;
+    if (!bid) return;
+    const act = splitrStore.getState();
+    const bill = selectBill(bid)(act);
+    if (!bill) return;
+    act.updateBillMeta(bid, { restaurantName: name.trim(), date });
+    for (const p of bill.participants) {
+      const keep = p.personId !== null ? picked.includes(p.personId) : guests.includes(p.displayName);
+      if (!keep) act.removeParticipant(bid, p.id);
+    }
+    for (const pid of picked) {
+      if (!bill.participants.some((p) => p.personId === pid)) act.addParticipant(bid, { personId: pid });
+    }
+    for (const g of guests) {
+      if (!bill.participants.some((p) => p.personId === null && p.displayName === g)) {
+        act.addParticipant(bid, { guestName: g });
+      }
+    }
+  };
+  const syncRef = useRef(syncScanBill);
+  syncRef.current = syncScanBill;
+
+  const create = () => {
+    if (!canCreate) return;
+    let bid = scanBillId.current;
+    if (bid) syncScanBill();
+    else bid = makeBill();
+    handedOff.current = true;
+    router.replace(billHref(bid, 'items'));
   };
 
+  // Never leave an orphan: leaving this screen without handing the scan bill on removes it.
+  useEffect(
+    () => () => {
+      const bid = scanBillId.current;
+      if (bid && !handedOff.current) splitrStore.getState().deleteBill(bid);
+    },
+    [],
+  );
+
+  const ensureBill = useCallback(() => {
+    scanBillId.current ??= makeBill();
+    return scanBillId.current;
+  }, [groupId, name, date, picked, guests]);
+  const onScanned = useCallback(
+    (id: string) => {
+      syncRef.current();
+      handedOff.current = true;
+      router.replace(billHref(id, 'review'));
+    },
+    [router],
+  );
+  const scan = useReceiptScan({ ensureBill, onDone: onScanned });
+  const canScan = dateOk && headcount > 0;
+  const typeItInAfterScan = () => {
+    scan.reset();
+    if (scanBillId.current) {
+      syncScanBill();
+      handedOff.current = true;
+      router.replace(billHref(scanBillId.current, 'items'));
+    } else create();
+  };
+
+  const scanHint = !dateOk ? 'Use the date format YYYY-MM-DD' : headcount === 0 ? 'Pick at least one person' : null;
   const nextHint = !nameOk
-    ? 'Name the restaurant to continue'
+    ? 'Name the restaurant to type the items in'
     : !dateOk
       ? 'Use the date format YYYY-MM-DD'
       : headcount === 0
         ? 'Pick at least one person'
         : null;
+
+  if (scan.state.kind !== 'idle') {
+    return (
+      <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-bg">
+        <ScanStatus
+          state={scan.state}
+          onRetry={() => void scan.retry()}
+          onStart={(m) => void scan.start(m)}
+          onTypeItIn={typeItInAfterScan}
+          onBack={scan.reset}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg">
@@ -105,15 +188,45 @@ export default function NewBillScreen() {
       <FlowScreen
         footer={
           <View>
-            {nextHint ? (
-              <Text className="px-4 pt-2 text-center font-brico-semibold text-meta text-muted">{nextHint}</Text>
+            {scanHint ?? nextHint ? (
+              <Text className="px-4 pt-2 text-center font-brico-semibold text-meta text-muted">
+                {scanHint ?? nextHint}
+              </Text>
             ) : null}
-            <StickyAction
-              label="Next: items"
-              accessibilityLabel="Next: items"
-              onPress={create}
-              disabled={!canCreate}
-            />
+            <View className="gap-2 px-4 pb-2 pt-3">
+              <Button
+                label="Scan receipt"
+                accessibilityLabel="Scan the receipt with the camera"
+                icon={ScanLine}
+                size="lg"
+                fullWidth
+                disabled={!canScan}
+                onPress={() => void scan.start('scan')}
+              />
+              <View className="flex-row gap-2">
+                <View className="flex-1">
+                  <Button
+                    label="Choose photo"
+                    accessibilityLabel="Choose a photo of the receipt"
+                    icon={ImageIcon}
+                    variant="outline"
+                    fullWidth
+                    disabled={!canScan}
+                    onPress={() => void scan.start('library')}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Button
+                    label="Type it in"
+                    accessibilityLabel="Type the items in by hand"
+                    variant="outline"
+                    fullWidth
+                    disabled={!canCreate}
+                    onPress={create}
+                  />
+                </View>
+              </View>
+            </View>
           </View>
         }
       >

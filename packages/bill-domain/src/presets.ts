@@ -1,12 +1,12 @@
 import type { Adjustment, AdjustmentId, BasisPoints, Paisa } from '@splitr/calculation-engine';
 
-/** D3. Default application order per preset kind. */
-export const defaultOrders = { discount: 10, serviceCharge: 20, tax: 30, tip: 40, fee: 50 } as const;
+/** D3. Default application order per preset kind (service after tax, so tax `after-discounts` means discounts only). */
+export const defaultOrders = { discount: 10, tax: 30, serviceCharge: 35, tip: 40, fee: 50 } as const;
 
 export function cardDiscount(
   id: AdjustmentId,
   order: number,
-  p: { rateBp: BasisPoints; capPaisa?: Paisa; label?: string },
+  p: { rateBp: BasisPoints; capPaisa?: Paisa; label?: string; printedAmount?: Paisa },
 ): Adjustment {
   return {
     id,
@@ -18,13 +18,14 @@ export function cardDiscount(
     order,
     allocation: { type: 'proportional' },
     source: 'user',
+    ...(p.printedAmount !== undefined ? { printedAmount: p.printedAmount } : {}),
   };
 }
 
 export function tax(
   id: AdjustmentId,
   order: number,
-  p: { rateBp: BasisPoints; base: 'original' | 'after-discounts'; label?: string },
+  p: { rateBp: BasisPoints; base: 'original' | 'after-discounts'; label?: string; printedAmount?: Paisa },
 ): Adjustment {
   return {
     id,
@@ -35,13 +36,14 @@ export function tax(
     order,
     allocation: { type: 'proportional' },
     source: 'user',
+    ...(p.printedAmount !== undefined ? { printedAmount: p.printedAmount } : {}),
   };
 }
 
 export function serviceCharge(
   id: AdjustmentId,
   order: number,
-  p: { rateBp: BasisPoints; label?: string },
+  p: { rateBp: BasisPoints; label?: string; printedAmount?: Paisa },
 ): Adjustment {
   return {
     id,
@@ -52,13 +54,14 @@ export function serviceCharge(
     order,
     allocation: { type: 'proportional' },
     source: 'user',
+    ...(p.printedAmount !== undefined ? { printedAmount: p.printedAmount } : {}),
   };
 }
 
 export function tip(
   id: AdjustmentId,
   order: number,
-  p: { amount: Paisa; split: 'equal' | 'proportional' },
+  p: { amount: Paisa; split: 'equal' | 'proportional'; printedAmount?: Paisa },
 ): Adjustment {
   return {
     id,
@@ -69,10 +72,15 @@ export function tip(
     order,
     allocation: { type: p.split },
     source: 'user',
+    ...(p.printedAmount !== undefined ? { printedAmount: p.printedAmount } : {}),
   };
 }
 
-export function fee(id: AdjustmentId, order: number, p: { amount: Paisa; label: string }): Adjustment {
+export function fee(
+  id: AdjustmentId,
+  order: number,
+  p: { amount: Paisa; label: string; printedAmount?: Paisa },
+): Adjustment {
   return {
     id,
     label: p.label,
@@ -82,15 +90,16 @@ export function fee(id: AdjustmentId, order: number, p: { amount: Paisa; label: 
     order,
     allocation: { type: 'proportional' },
     source: 'user',
+    ...(p.printedAmount !== undefined ? { printedAmount: p.printedAmount } : {}),
   };
 }
 
 export type PresetDescription =
-  | { kind: 'cardDiscount'; rateBp: BasisPoints; capPaisa?: Paisa; label: string }
-  | { kind: 'tax'; rateBp: BasisPoints; base: 'original' | 'after-discounts'; label: string }
-  | { kind: 'serviceCharge'; rateBp: BasisPoints; label: string }
-  | { kind: 'tip'; amount: Paisa; split: 'equal' | 'proportional' }
-  | { kind: 'fee'; amount: Paisa; label: string }
+  | { kind: 'cardDiscount'; rateBp: BasisPoints; capPaisa?: Paisa; label: string; printedAmount?: Paisa }
+  | { kind: 'tax'; rateBp: BasisPoints; base: 'original' | 'after-discounts'; label: string; printedAmount?: Paisa }
+  | { kind: 'serviceCharge'; rateBp: BasisPoints; label: string; printedAmount?: Paisa }
+  | { kind: 'tip'; amount: Paisa; split: 'equal' | 'proportional'; printedAmount?: Paisa }
+  | { kind: 'fee'; amount: Paisa; label: string; printedAmount?: Paisa }
   | { kind: 'custom' };
 
 /** Fills in engine defaults so an adjustment written with or without them compares equal. */
@@ -129,6 +138,10 @@ function matches(adj: Adjustment, rebuilt: Adjustment): boolean {
  * (ignoring nothing but defaults), otherwise `{ kind: 'custom' }`. Round-trips with the builders.
  */
 export function describeAdjustment(adj: Adjustment): PresetDescription {
+  const { printedAmount, ...bare } = adj; // D3a: printedAmount is metadata, not part of preset identity
+  const withPrinted = <T extends object>(d: T): T & { printedAmount?: Paisa } =>
+    printedAmount !== undefined ? { ...d, printedAmount } : d;
+  adj = bare;
   const { id, order } = adj;
   const rateBp = adj.value.type === 'rate' ? adj.value.bp : undefined;
   const fixedAmount = adj.value.type === 'fixed' ? adj.value.amount : undefined;
@@ -138,33 +151,33 @@ export function describeAdjustment(adj: Adjustment): PresetDescription {
       if (rateBp === undefined) break;
       const capPaisa = adj.cap;
       const params = { rateBp, label: adj.label, ...(capPaisa !== undefined ? { capPaisa } : {}) };
-      if (matches(adj, cardDiscount(id, order, params))) return { kind: 'cardDiscount', ...params };
+      if (matches(adj, cardDiscount(id, order, params))) return withPrinted({ kind: 'cardDiscount', ...params });
       break;
     }
     case 'tax': {
       if (rateBp === undefined) break;
       const base = adj.base?.type === 'items-after' ? 'after-discounts' : 'original';
       const params = { rateBp, base, label: adj.label } as const;
-      if (matches(adj, tax(id, order, params))) return { kind: 'tax', ...params };
+      if (matches(adj, tax(id, order, params))) return withPrinted({ kind: 'tax', ...params });
       break;
     }
     case 'serviceCharge': {
       if (rateBp === undefined) break;
       const params = { rateBp, label: adj.label };
-      if (matches(adj, serviceCharge(id, order, params))) return { kind: 'serviceCharge', ...params };
+      if (matches(adj, serviceCharge(id, order, params))) return withPrinted({ kind: 'serviceCharge', ...params });
       break;
     }
     case 'tip': {
       if (fixedAmount === undefined) break;
       const split = adj.allocation?.type === 'equal' ? 'equal' : 'proportional';
       const params = { amount: fixedAmount, split } as const;
-      if (matches(adj, tip(id, order, params))) return { kind: 'tip', ...params };
+      if (matches(adj, tip(id, order, params))) return withPrinted({ kind: 'tip', ...params });
       break;
     }
     case 'fee': {
       if (fixedAmount === undefined) break;
       const params = { amount: fixedAmount, label: adj.label };
-      if (matches(adj, fee(id, order, params))) return { kind: 'fee', ...params };
+      if (matches(adj, fee(id, order, params))) return withPrinted({ kind: 'fee', ...params });
       break;
     }
     default:

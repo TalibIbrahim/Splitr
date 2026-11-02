@@ -52,19 +52,25 @@ interface Form {
   discPct: string;
   discCap: string;
   discLabel?: string;
+  /** Printed amounts from a scanned receipt; kept until the user edits that row's values (D3a). */
+  discPrinted?: Paisa;
   taxOn: boolean;
   taxPct: string;
   taxBase: 'original' | 'after-discounts';
   taxLabel?: string;
+  taxPrinted?: Paisa;
   svcOn: boolean;
   svcPct: string;
   svcLabel?: string;
+  svcPrinted?: Paisa;
   tipOn: boolean;
   tipAmt: string;
   tipSplit: 'equal' | 'proportional';
+  tipPrinted?: Paisa;
   feeOn: boolean;
   feeLabel: string;
   feeAmt: string;
+  feePrinted?: Paisa;
 }
 
 function firstOf<K extends Kind>(adjs: readonly Adjustment[], kind: K) {
@@ -94,19 +100,24 @@ function seed(adjs: readonly Adjustment[]): { form: Form; slots: Record<Kind, Sl
     discPct: disc ? formatBp(disc.d.rateBp) : '',
     discCap: disc?.d.capPaisa !== undefined ? toRupeeInputText(disc.d.capPaisa) : '',
     discLabel: disc?.d.label,
+    discPrinted: disc?.d.printedAmount,
     taxOn: !!tx,
     taxPct: tx ? formatBp(tx.d.rateBp) : '',
     taxBase: tx?.d.base ?? 'original',
     taxLabel: tx?.d.label,
+    taxPrinted: tx?.d.printedAmount,
     svcOn: !!svc,
     svcPct: svc ? formatBp(svc.d.rateBp) : '',
     svcLabel: svc?.d.label,
+    svcPrinted: svc?.d.printedAmount,
     tipOn: !!tp,
     tipAmt: tp ? toRupeeInputText(tp.d.amount) : '',
     tipSplit: tp?.d.split ?? 'equal',
+    tipPrinted: tp?.d.printedAmount,
     feeOn: !!fe,
     feeLabel: fe?.d.label ?? '',
     feeAmt: fe ? toRupeeInputText(fe.d.amount) : '',
+    feePrinted: fe?.d.printedAmount,
   };
   return { form, slots, managed };
 }
@@ -135,6 +146,7 @@ function build(
         rateBp: p.bp,
         ...(cap !== undefined ? { capPaisa: cap } : {}),
         ...(f.discLabel ? { label: f.discLabel } : {}),
+        ...(f.discPrinted !== undefined ? { printedAmount: f.discPrinted } : {}),
       }),
     );
   }
@@ -142,7 +154,12 @@ function build(
     const p = pct(f.taxPct, 'tax');
     if ('error' in p) return { ok: false, problem: p.error };
     out.push(
-      tax(slots.tax.id, slots.tax.order, { rateBp: p.bp, base: f.taxBase, ...(f.taxLabel ? { label: f.taxLabel } : {}) }),
+      tax(slots.tax.id, slots.tax.order, {
+        rateBp: p.bp,
+        base: f.taxBase,
+        ...(f.taxLabel ? { label: f.taxLabel } : {}),
+        ...(f.taxPrinted !== undefined ? { printedAmount: f.taxPrinted } : {}),
+      }),
     );
   }
   if (f.svcOn) {
@@ -152,19 +169,28 @@ function build(
       serviceCharge(slots.serviceCharge.id, slots.serviceCharge.order, {
         rateBp: p.bp,
         ...(f.svcLabel ? { label: f.svcLabel } : {}),
+        ...(f.svcPrinted !== undefined ? { printedAmount: f.svcPrinted } : {}),
       }),
     );
   }
   if (f.tipOn) {
     const a = parseRupees(f.tipAmt);
     if (!a.ok) return { ok: false, problem: `Tip: ${rupeesErrorText(a.reason)}` };
-    out.push(tip(slots.tip.id, slots.tip.order, { amount: a.paisa, split: f.tipSplit }));
+    out.push(tip(slots.tip.id, slots.tip.order, {
+        amount: a.paisa,
+        split: f.tipSplit,
+        ...(f.tipPrinted !== undefined ? { printedAmount: f.tipPrinted } : {}),
+      }));
   }
   if (f.feeOn) {
     const a = parseRupees(f.feeAmt);
     if (!a.ok) return { ok: false, problem: `Fee: ${rupeesErrorText(a.reason)}` };
     if (f.feeLabel.trim() === '') return { ok: false, problem: 'Give the fee a name' };
-    out.push(fee(slots.fee.id, slots.fee.order, { amount: a.paisa, label: f.feeLabel.trim() }));
+    out.push(fee(slots.fee.id, slots.fee.order, {
+        amount: a.paisa,
+        label: f.feeLabel.trim(),
+        ...(f.feePrinted !== undefined ? { printedAmount: f.feePrinted } : {}),
+      }));
   }
   return { ok: true, adjustments: out };
 }
@@ -209,7 +235,14 @@ function ChargesForm({
 
   const set = (patch: Partial<Form>, kind?: Kind) => {
     if (kind) setFocusKind(kind);
-    setForm((f) => ({ ...f, ...patch }));
+    // D3a: editing a row's rate, base, amount or split drops its printed amount.
+    const drops: Partial<Form> = {};
+    if ('discPct' in patch || 'discCap' in patch) drops.discPrinted = undefined;
+    if ('taxPct' in patch || 'taxBase' in patch) drops.taxPrinted = undefined;
+    if ('svcPct' in patch) drops.svcPrinted = undefined;
+    if ('tipAmt' in patch || 'tipSplit' in patch) drops.tipPrinted = undefined;
+    if ('feeAmt' in patch || 'feeLabel' in patch) drops.feePrinted = undefined;
+    setForm((f) => ({ ...f, ...patch, ...drops }));
   };
 
   const pctError = (text: string): string | undefined => {
