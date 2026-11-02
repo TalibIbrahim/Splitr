@@ -19,7 +19,7 @@ export function QtyControl({ value, onChange, subject, onSubmitEditing }: QtyCon
   const { colors } = useTheme();
   const n = parseQty(value) ?? 1;
   const of = subject ? ` of ${subject}` : '';
-  const btn = 'items-center justify-center rounded-button bg-surface-2 active:opacity-80';
+  const btn = 'items-center justify-center rounded-button bg-surface-2 active:opacity-pressed';
   return (
     <View className="flex-row items-center gap-1">
       <Pressable
@@ -31,7 +31,7 @@ export function QtyControl({ value, onChange, subject, onSubmitEditing }: QtyCon
       >
         <Minus size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
       </Pressable>
-      <View style={{ width: 64 }}>
+      <View style={{ width: sizes.qtyBox }}>
         <Field
           compact
           accessibilityLabel={`Quantity${of}`}

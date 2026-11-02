@@ -95,7 +95,7 @@ export default function NewBillScreen() {
           accessibilityLabel="Cancel new bill"
           onPress={() => (router.canGoBack() ? router.back() : router.replace(HOME_HREF))}
           style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-          className="items-center justify-center rounded-pill active:opacity-80"
+          className="items-center justify-center rounded-pill active:opacity-pressed"
         >
           <X size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
         </Pressable>
@@ -143,7 +143,7 @@ export default function NewBillScreen() {
                 accessibilityLabel="One day earlier"
                 onPress={() => setDate((d) => shiftDay(d, -1))}
                 style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                className="items-center justify-center rounded-button bg-surface-2 active:opacity-80"
+                className="items-center justify-center rounded-button bg-surface-2 active:opacity-pressed"
               >
                 <Minus size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
               </Pressable>
@@ -161,7 +161,7 @@ export default function NewBillScreen() {
                 accessibilityLabel="One day later"
                 onPress={() => setDate((d) => shiftDay(d, 1))}
                 style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                className="items-center justify-center rounded-button bg-surface-2 active:opacity-80"
+                className="items-center justify-center rounded-button bg-surface-2 active:opacity-pressed"
               >
                 <Plus size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
               </Pressable>
@@ -208,7 +208,7 @@ export default function NewBillScreen() {
                   accessibilityLabel={`Remove guest ${g}`}
                   onPress={() => setGuests((cur) => cur.filter((_, j) => j !== i))}
                   style={{ minHeight: sizes.minTouch }}
-                  className="flex-row items-center gap-2 rounded-pill bg-ink px-4 active:opacity-80"
+                  className="flex-row items-center gap-2 rounded-pill bg-ink px-4 active:opacity-pressed"
                 >
                   <Text className="font-brico-extrabold text-body text-bg">{g} (guest)</Text>
                   <X size={sizes.icon.sm} color={colors.bg} strokeWidth={sizes.icon.strokeWidth} />

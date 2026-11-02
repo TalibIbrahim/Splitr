@@ -2,29 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextInputInstance } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus, Receipt, Trash2 } from 'lucide-react-native';
-import type { Assignment, Item } from '@splitr/calculation-engine';
+import type { Item } from '@splitr/calculation-engine';
 import { parseRupees } from '@splitr/bill-domain';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
-import { splitrStore } from '../../../store';
+import { splitrStore, type RemovedItem } from '../../../store';
 import { toRupeeInputText } from '../../../lib/format-money';
 import { parseQty, sumLineTotals } from '../../../lib/sums';
-import { Button, Card, Money, StickyAction } from '../../../components/ui';
+import { Button, Card, ModalSheet, Money, StickyAction } from '../../../components/ui';
 import { EmptyState } from '../../../components/bill';
 import { AmountField, Field } from '../../../components/bill/flow/Field';
 import { FlowScreen } from '../../../components/bill/flow/FlowScreen';
 import { QtyControl } from '../../../components/bill/flow/QtyControl';
-import { SheetModal } from '../../../components/bill/flow/SheetModal';
 import { BillNotFound, useBillRoute } from '../../../components/bill/flow/BillGate';
 import { billHref } from '../../../components/bill/flow/nav';
 import { rupeesErrorText } from '../../../components/bill/flow/messages';
-
-interface Removed {
-  name: string;
-  quantity: number;
-  lineTotal: Item['lineTotal'];
-  assignment: Assignment;
-}
 
 export default function ItemsScreen() {
   const { id, bill } = useBillRoute();
@@ -53,7 +45,7 @@ function ItemsBody({
   const [tried, setTried] = useState(false);
 
   const [editing, setEditing] = useState<Item | null>(null);
-  const [removed, setRemoved] = useState<Removed | null>(null);
+  const [removed, setRemoved] = useState<RemovedItem | null>(null);
   const [receiptText, setReceiptText] = useState(() =>
     printedTotal === undefined ? '' : toRupeeInputText(printedTotal),
   );
@@ -86,18 +78,12 @@ function ItemsBody({
   };
 
   const remove = (it: Item) => {
-    setRemoved({ name: it.name, quantity: it.quantity, lineTotal: it.lineTotal, assignment: it.assignment });
-    act().removeItem(id, it.id);
+    setRemoved(act().removeItem(id, it.id));
     setEditing(null);
   };
   const undo = () => {
     if (!removed) return;
-    const newId = act().addItem(id, {
-      name: removed.name,
-      quantity: removed.quantity,
-      lineTotal: removed.lineTotal,
-    });
-    if (removed.assignment.kind !== 'unassigned') act().setItemAssignment(id, newId, removed.assignment);
+    act().restoreItem(removed);
     setRemoved(null);
   };
 
@@ -118,14 +104,14 @@ function ItemsBody({
           {removed ? (
             <View className="mx-4 mt-2 flex-row items-center justify-between rounded-button bg-chip pl-4">
               <Text numberOfLines={1} className="flex-1 font-brico-semibold text-body-small text-ink">
-                Removed {removed.name}
+                Removed {removed.item.name}
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Undo removing ${removed.name}`}
+                accessibilityLabel={`Undo removing ${removed.item.name}`}
                 onPress={undo}
                 style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                className="items-center justify-center px-4 active:opacity-80"
+                className="items-center justify-center px-4 active:opacity-pressed"
               >
                 <Text className="font-brico-extrabold text-body text-ink">Undo</Text>
               </Pressable>
@@ -208,7 +194,7 @@ function ItemsBody({
                   accessibilityLabel={`Edit ${it.name}`}
                   onPress={() => setEditing(it)}
                   style={{ minHeight: sizes.minTouch }}
-                  className="flex-1 flex-row items-center gap-3 py-3 pl-4 active:opacity-80"
+                  className="flex-1 flex-row items-center gap-3 py-3 pl-4 active:opacity-pressed"
                 >
                   <View className="flex-1">
                     <Text numberOfLines={1} className="font-brico-bold text-item-name text-ink">
@@ -225,7 +211,7 @@ function ItemsBody({
                   accessibilityLabel={`Delete ${it.name}`}
                   onPress={() => remove(it)}
                   style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                  className="items-center justify-center active:opacity-80"
+                  className="items-center justify-center active:opacity-pressed"
                 >
                   <Trash2 size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
                 </Pressable>
@@ -282,7 +268,7 @@ function EditSheet({
   const valid = name.trim().length > 0 && parsed.ok && qtyN !== null;
 
   return (
-    <SheetModal visible={item !== null} onClose={onClose}>
+    <ModalSheet visible={item !== null} onClose={onClose}>
       {item ? (
         <View className="gap-4">
           <Text className="font-brico-extrabold text-screen-title text-ink">Edit item</Text>
@@ -326,6 +312,6 @@ function EditSheet({
           </View>
         </View>
       ) : null}
-    </SheetModal>
+    </ModalSheet>
   );
 }

@@ -44,7 +44,7 @@ export function BalanceTile({ kind, amount, onPress }: BalanceTileProps) {
       accessibilityLabel={a11y}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch }}
-      className={`${cls} active:opacity-80`}
+      className={`${cls} active:opacity-pressed`}
     >
       {body}
     </Pressable>

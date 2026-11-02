@@ -63,6 +63,15 @@ export interface ItemPatch {
   unitPrice?: Paisa | null;
 }
 
+/** What `removeItem` took out, enough for `restoreItem` to undo it exactly (spec S10). */
+export interface RemovedItem {
+  billId: string;
+  item: Item;
+  /** Position in `items` before removal. */
+  index: number;
+  transferStatusesBefore: Bill['transferStatuses'];
+}
+
 export type SettleResult = { ok: true } | { ok: false; reason: string };
 
 export interface SplitrActions {
@@ -78,7 +87,8 @@ export interface SplitrActions {
   removeParticipant(id: string, pid: string): void;
   addItem(id: string, item: { name: string; quantity: number; lineTotal: Paisa }): string;
   updateItem(id: string, itemId: string, patch: ItemPatch): void;
-  removeItem(id: string, itemId: string): void;
+  removeItem(id: string, itemId: string): RemovedItem | null;
+  restoreItem(removed: RemovedItem): void;
   toggleAssign(id: string, itemId: string, pid: string): void;
   assignRemaining(id: string): void;
   setItemAssignment(id: string, itemId: string, assignment: Assignment): void;
@@ -181,10 +191,13 @@ function cloneAdjustments(source: readonly Adjustment[], newId: () => string): A
 }
 
 /** Re-establishes the invariant: transferStatuses follow the current settlement transfers. */
-function withReconciledTransfers(bill: Bill): { bill: Bill; dropped: number } {
+function withReconciledTransfers(
+  bill: Bill,
+  baseStatuses: Bill['transferStatuses'] = bill.transferStatuses,
+): { bill: Bill; dropped: number } {
   const result = calculateBill(toBillInput(bill));
   const transfers = result.ok && result.breakdown.settlement ? result.breakdown.settlement.transfers : [];
-  const { statuses, droppedPaid } = reconcileTransferStatuses(bill.transferStatuses, transfers);
+  const { statuses, droppedPaid } = reconcileTransferStatuses(baseStatuses, transfers);
   return { bill: { ...bill, transferStatuses: statuses }, dropped: droppedPaid };
 }
 
@@ -431,7 +444,24 @@ export function createSplitrStore(deps: SplitrDeps): SplitrStore {
       },
 
       removeItem(id, itemId) {
+        const bill = findOpenBill(id);
+        const index = bill ? bill.items.findIndex((it) => it.id === itemId) : -1;
+        const item = bill?.items[index];
+        if (!bill || !item) return null;
+        const removed: RemovedItem = { billId: id, item, index, transferStatusesBefore: bill.transferStatuses };
         mutateBill(id, (b) => ({ ...b, items: b.items.filter((it) => it.id !== itemId) }));
+        return removed;
+      },
+
+      restoreItem(removed) {
+        const bill = findOpenBill(removed.billId);
+        if (!bill || bill.items.some((it) => it.id === removed.item.id)) return;
+        const items = [...bill.items];
+        items.splice(Math.min(removed.index, items.length), 0, removed.item);
+        const result = withReconciledTransfers({ ...bill, items, updatedAt: now() }, removed.transferStatusesBefore);
+        const { notice } = get();
+        if (notice && notice.kind === 'payments-reset' && notice.billId === removed.billId) set({ notice: null });
+        commit(removed.billId, result);
       },
 
       toggleAssign(id, itemId, pid) {

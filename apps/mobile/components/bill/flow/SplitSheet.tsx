@@ -8,10 +8,9 @@ import { useTheme } from '../../../theme';
 import { formatBp, parsePercentToBp, percentErrorText } from '../../../lib/percent';
 import { toRupeeInputText } from '../../../lib/format-money';
 import { checkSum } from '../../../lib/sums';
-import { Button, Money } from '../../ui';
+import { Button, ModalSheet, Money } from '../../ui';
 import { AmountField, PercentField } from './Field';
 import { Segmented } from './Segmented';
-import { SheetModal } from './SheetModal';
 import { ToggleChip } from './ToggleChip';
 import { rupeesErrorText } from './messages';
 
@@ -75,9 +74,9 @@ function PersonRow({ person, children }: { person: SplitPerson; children: ReactN
 /** Long-press split editor for one item: Equal / Units / Percent / Amounts with live validation text. */
 export function SplitSheet({ item, people, onClose, onApply }: SplitSheetProps) {
   return (
-    <SheetModal visible={item !== null} onClose={onClose}>
+    <ModalSheet visible={item !== null} onClose={onClose}>
       {item ? <SplitBody key={item.id} item={item} people={people} onClose={onClose} onApply={onApply} /> : null}
-    </SheetModal>
+    </ModalSheet>
   );
 }
 
@@ -186,7 +185,7 @@ function SplitBody({
                   accessibilityLabel={`One less for ${who}`}
                   onPress={() => setUnitsState((m) => ({ ...m, [p.id]: Math.max(0, n - 1) }))}
                   style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                  className="items-center justify-center rounded-button bg-surface-2 active:opacity-80"
+                  className="items-center justify-center rounded-button bg-surface-2 active:opacity-pressed"
                 >
                   <Minus size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
                 </Pressable>
@@ -202,7 +201,7 @@ function SplitBody({
                   accessibilityLabel={`One more for ${who}`}
                   onPress={() => setUnitsState((m) => ({ ...m, [p.id]: n + 1 }))}
                   style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                  className="items-center justify-center rounded-button bg-surface-2 active:opacity-80"
+                  className="items-center justify-center rounded-button bg-surface-2 active:opacity-pressed"
                 >
                   <Plus size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
                 </Pressable>

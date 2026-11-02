@@ -37,7 +37,7 @@ export function PersonCard({ name, amount, tag, isMe, selected, onPress }: Perso
       accessibilityState={{ selected: !!selected }}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch }}
-      className={`gap-1 rounded-card border-2 p-4 active:opacity-80 ${isMe ? 'bg-accent' : 'bg-surface-2'} ${
+      className={`gap-1 rounded-card border-2 p-4 active:opacity-pressed ${isMe ? 'bg-accent' : 'bg-surface-2'} ${
         selected ? 'border-ink' : 'border-transparent'
       }`}
     >

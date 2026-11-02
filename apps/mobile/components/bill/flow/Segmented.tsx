@@ -25,7 +25,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
             accessibilityState={{ checked: on }}
             onPress={() => onChange(o.value)}
             style={{ minHeight: sizes.minTouch }}
-            className={`flex-1 flex-row items-center justify-center gap-1 rounded-button px-3 active:opacity-80 ${
+            className={`flex-1 flex-row items-center justify-center gap-1 rounded-button px-3 active:opacity-pressed ${
               on ? 'bg-ink' : 'bg-surface-2'
             }`}
           >

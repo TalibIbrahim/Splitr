@@ -6,7 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check, ChevronLeft, Pencil, Plus, ScanLine, Trash2 } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { selectGroups, selectPeople, splitrStore, useSplitr } from '../../store';
-import { Avatar, Button, Sheet, TextField } from '../../components/ui';
+import { Avatar, Button, ModalSheet, TextField } from '../../components/ui';
 import { useTheme } from '../../theme';
 
 export default function CrewEditor() {
@@ -77,7 +77,7 @@ export default function CrewEditor() {
               accessibilityLabel="Go back"
               onPress={() => router.back()}
               style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-              className="items-center justify-center active:opacity-80"
+              className="items-center justify-center active:opacity-pressed"
             >
               <ChevronLeft size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
             </Pressable>
@@ -135,7 +135,7 @@ export default function CrewEditor() {
                         accessibilityState={{ checked: on, disabled: isMe }}
                         onPress={() => toggle(p.id)}
                         style={{ minHeight: sizes.minTouch }}
-                        className="flex-1 flex-row items-center gap-3 py-1 active:opacity-80"
+                        className="flex-1 flex-row items-center gap-3 py-1 active:opacity-pressed"
                       >
                         <Avatar name={p.displayName} size="sm" isCurrentUser={isMe} />
                         <Text
@@ -157,7 +157,7 @@ export default function CrewEditor() {
                         accessibilityLabel={`Rename ${p.displayName}`}
                         onPress={() => setRenaming({ id: p.id, value: p.displayName })}
                         style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                        className="items-center justify-center active:opacity-80"
+                        className="items-center justify-center active:opacity-pressed"
                       >
                         <Pencil size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
                       </Pressable>
@@ -226,16 +226,20 @@ export default function CrewEditor() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {group && confirmDelete ? (
-        <View className="absolute bottom-0 left-0 right-0">
-          <Sheet className="gap-3">
-            <Text accessibilityRole="header" className="font-brico-extrabold text-screen-title text-ink">
-              Delete {group.name}?
-            </Text>
+      {group ? (
+        <ModalSheet
+          visible={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          title={`Delete ${group.name}?`}
+          closeLabel="Close delete confirmation"
+          className="gap-3"
+        >
+          <View className="gap-3">
             <Text className="font-brico-medium text-body text-muted">
               Past bills stay in History. The people stay saved.
             </Text>
             <Button
+              variant="destructive"
               size="lg"
               fullWidth
               label="Delete crew"
@@ -254,8 +258,8 @@ export default function CrewEditor() {
               accessibilityLabel="Cancel, keep this crew"
               onPress={() => setConfirmDelete(false)}
             />
-          </Sheet>
-        </View>
+          </View>
+        </ModalSheet>
       ) : null}
     </SafeAreaView>
   );

@@ -16,12 +16,11 @@ import { perPersonAmount } from '@splitr/bill-domain';
 import type { Bill } from '@splitr/shared-types';
 import { motion } from '@splitr/design-tokens';
 import { selectPreview, splitrStore, useSplitr } from '../../../store';
-import { Button, StickyAction } from '../../../components/ui';
+import { Button, ModalSheet, StickyAction } from '../../../components/ui';
 import { AssignAvatarRow, EmptyState, ItemCard, type AssignPerson } from '../../../components/bill';
 import { useReducedMotion } from '../../../lib/useReducedMotion';
 import { Field } from '../../../components/bill/flow/Field';
 import { FlowScreen } from '../../../components/bill/flow/FlowScreen';
-import { SheetModal } from '../../../components/bill/flow/SheetModal';
 import { SplitSheet, type SplitPerson } from '../../../components/bill/flow/SplitSheet';
 import { BillNotFound, useBillRoute } from '../../../components/bill/flow/BillGate';
 import { billHref } from '../../../components/bill/flow/nav';
@@ -278,7 +277,7 @@ function GuestSheet({
 }) {
   const ref = useRef<TextInputInstance>(null);
   return (
-    <SheetModal visible={open} onClose={onClose}>
+    <ModalSheet visible={open} onClose={onClose}>
       <View className="gap-4">
         <Text className="font-brico-extrabold text-screen-title text-ink">Add a guest</Text>
         <Field
@@ -301,6 +300,6 @@ function GuestSheet({
           onPress={onAdd}
         />
       </View>
-    </SheetModal>
+    </ModalSheet>
   );
 }

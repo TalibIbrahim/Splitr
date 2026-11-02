@@ -22,7 +22,7 @@ export function NoticeBanner({ count, onDismiss }: NoticeBannerProps) {
         accessibilityLabel="Dismiss notice"
         onPress={onDismiss}
         style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-        className="items-center justify-center active:opacity-80"
+        className="items-center justify-center active:opacity-pressed"
       >
         <X size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
       </Pressable>

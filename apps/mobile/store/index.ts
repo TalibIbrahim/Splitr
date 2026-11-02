@@ -40,4 +40,4 @@ export function useSplitr<T>(selector: (state: SplitrState) => T): T {
 }
 
 export * from './selectors';
-export type { SplitrState } from './create-store';
+export type { SplitrState, RemovedItem } from './create-store';

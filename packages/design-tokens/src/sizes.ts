@@ -8,6 +8,10 @@ export const sizes = {
   buttonHeight: { md: 48, lg: 56 },
   /** Bottom-sheet grabber bar. */
   grabber: { width: 40, height: 4 },
+  /** Quantity number box (QtyControl). */
+  qtyBox: 64,
+  /** Modal sheet max height as a percentage of the screen. */
+  sheetMaxHeightPct: 88,
   /** Icon disc (empty states). */
   iconDisc: 64,
   /** Active-tab indicator bar. */

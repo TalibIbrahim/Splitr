@@ -1,7 +1,6 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { MessageCircle, Share2 } from 'lucide-react-native';
-import { Button } from '../../ui';
-import { ModalSheet } from './ModalSheet';
+import { Button, ModalSheet } from '../../ui';
 
 interface ShareSheetProps {
   visible: boolean;
@@ -12,8 +11,7 @@ interface ShareSheetProps {
 
 export function ShareSheet({ visible, onClose, onWhatsApp, onMore }: ShareSheetProps) {
   return (
-    <ModalSheet visible={visible} onClose={onClose} closeLabel="Close share options">
-      <Text className="mb-3 font-brico-extrabold text-screen-title text-ink">Share the split</Text>
+    <ModalSheet visible={visible} onClose={onClose} title="Share the split" closeLabel="Close share options">
       <View className="gap-3">
         <Button
           label="WhatsApp"

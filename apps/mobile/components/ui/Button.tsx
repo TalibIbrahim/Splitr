@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
 
-export type ButtonVariant = 'primary' | 'outline' | 'onHero';
+export type ButtonVariant = 'primary' | 'outline' | 'onHero' | 'destructive';
 export type ButtonSize = 'md' | 'lg';
 
 interface ButtonProps {
@@ -24,11 +24,13 @@ const CONTAINER: Record<ButtonVariant, string> = {
   primary: 'bg-ink border-2 border-ink',
   outline: 'bg-transparent border-2 border-ink',
   onHero: 'bg-hero-button border-2 border-hero-button',
+  destructive: 'bg-accent border-2 border-accent',
 };
 const LABEL: Record<ButtonVariant, string> = {
   primary: 'text-bg',
   outline: 'text-ink',
   onHero: 'text-on-hero-button',
+  destructive: 'text-on-accent',
 };
 const SIZE: Record<ButtonSize, string> = {
   md: 'h-button-md px-5 rounded-button',
@@ -49,7 +51,13 @@ export function Button({
 }: ButtonProps) {
   const { colors } = useTheme();
   const inactive = disabled || loading;
-  const fg = variant === 'primary' ? colors.bg : variant === 'outline' ? colors.ink : colors.onHeroButton;
+  const FG = {
+    primary: colors.bg,
+    outline: colors.ink,
+    onHero: colors.onHeroButton,
+    destructive: colors.onAccent,
+  } as const;
+  const fg = FG[variant];
 
   return (
     <Pressable
@@ -59,9 +67,9 @@ export function Button({
       disabled={inactive}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-      className={`flex-row items-center justify-center gap-2 active:opacity-80 ${CONTAINER[variant]} ${SIZE[size]} ${
+      className={`flex-row items-center justify-center gap-2 active:opacity-pressed ${CONTAINER[variant]} ${SIZE[size]} ${
         fullWidth ? 'self-stretch' : 'self-start'
-      } ${disabled ? 'opacity-40' : ''}`}
+      } ${disabled ? 'opacity-disabled' : ''}`}
     >
       {loading ? (
         <ActivityIndicator color={fg} />

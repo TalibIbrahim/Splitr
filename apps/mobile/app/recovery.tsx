@@ -27,6 +27,7 @@ export default function Recovery() {
         </Text>
         {reason ? <Text className="font-brico-semibold text-meta text-muted">{reason}</Text> : null}
         <Button
+          variant="destructive"
           size="lg"
           fullWidth
           label="Start fresh"

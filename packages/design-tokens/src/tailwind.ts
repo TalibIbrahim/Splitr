@@ -3,6 +3,7 @@ import { fontFamily, typeScale } from './typography';
 import { radii } from './radii';
 import { spacing } from './spacing';
 import { sizes } from './sizes';
+import { opacity } from './opacity';
 
 /**
  * Framework-agnostic data for Tailwind v3 / NativeWind `theme.extend`.
@@ -35,6 +36,7 @@ export const tailwindTheme = {
     'button-md': `${sizes.buttonHeight.md}px`,
     'button-lg': `${sizes.buttonHeight.lg}px`,
   },
+  opacity: Object.fromEntries(Object.entries(opacity).map(([k, v]) => [k, String(v)])),
   fontFamily: { ...fontFamily },
   fontSize,
 } as const;

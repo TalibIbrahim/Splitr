@@ -30,7 +30,7 @@ export function TransferRow({ from, to, amount, paid, onTogglePaid }: TransferRo
         accessibilityState={{ checked: paid }}
         onPress={onTogglePaid}
         style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-        className={`flex-row items-center justify-center gap-1 rounded-pill px-4 active:opacity-80 ${
+        className={`flex-row items-center justify-center gap-1 rounded-pill px-4 active:opacity-pressed ${
           paid ? 'bg-chip' : 'border-2 border-ink'
         }`}
       >

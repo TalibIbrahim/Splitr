@@ -7,9 +7,8 @@ import { parseRupees } from '@splitr/bill-domain';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
 import { splitPaymentStatus } from '../../../lib/payments';
-import { Button, Money } from '../../ui';
+import { Button, ModalSheet, Money } from '../../ui';
 import { MoneyInput } from '../MoneyInput';
-import { ModalSheet } from './ModalSheet';
 
 interface SplitPaymentSheetProps {
   visible: boolean;

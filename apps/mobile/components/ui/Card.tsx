@@ -48,7 +48,7 @@ export function Card({ tone = 'surface2', dashed, children, className, onPress, 
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
         style={{ minHeight: sizes.minTouch }}
-        className={`${base} active:opacity-80`}
+        className={`${base} active:opacity-pressed`}
       >
         {inner}
       </Pressable>

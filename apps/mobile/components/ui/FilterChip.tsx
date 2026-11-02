@@ -19,7 +19,7 @@ export function FilterChip({ label, selected, onPress }: FilterChipProps) {
       accessibilityState={{ selected }}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch }}
-      className={`flex-row items-center gap-1 rounded-pill px-4 active:opacity-80 ${selected ? 'bg-ink' : 'bg-chip'}`}
+      className={`flex-row items-center gap-1 rounded-pill px-4 active:opacity-pressed ${selected ? 'bg-ink' : 'bg-chip'}`}
     >
       {selected ? <Check size={sizes.icon.sm} color={colors.bg} strokeWidth={sizes.icon.strokeWidth} /> : null}
       <Text

@@ -49,7 +49,7 @@ export function WhoPaid({ payers, paidAmounts, onPick, onSplit }: WhoPaidProps) 
             accessibilityState={{ selected: p.paid }}
             onPress={() => onPick(p.id)}
             style={{ minHeight: sizes.minTouch }}
-            className={`flex-row items-center gap-1 rounded-pill border-2 px-4 active:opacity-80 ${
+            className={`flex-row items-center gap-1 rounded-pill border-2 px-4 active:opacity-pressed ${
               p.isMe ? 'bg-accent' : 'bg-chip'
             } ${p.paid ? 'border-ink' : 'border-transparent'}`}
           >
@@ -74,7 +74,7 @@ export function WhoPaid({ payers, paidAmounts, onPick, onSplit }: WhoPaidProps) 
           accessibilityLabel="Split payment between several people"
           onPress={onSplit}
           style={{ minHeight: sizes.minTouch }}
-          className="flex-row items-center gap-1 rounded-pill border-2 border-dashed border-ink px-4 active:opacity-80"
+          className="flex-row items-center gap-1 rounded-pill border-2 border-dashed border-ink px-4 active:opacity-pressed"
         >
           <Split size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
           <Text className="font-brico-bold text-body-small text-ink">Split payment</Text>

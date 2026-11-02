@@ -20,7 +20,7 @@ export function ToggleChip({ label, on, onPress, accessibilityLabel }: ToggleChi
       accessibilityState={{ checked: on }}
       onPress={onPress}
       style={{ minHeight: sizes.minTouch }}
-      className={`flex-row items-center gap-2 rounded-pill px-4 active:opacity-80 ${on ? 'bg-ink' : 'bg-chip'}`}
+      className={`flex-row items-center gap-2 rounded-pill px-4 active:opacity-pressed ${on ? 'bg-ink' : 'bg-chip'}`}
     >
       {on ? <Check size={sizes.icon.sm} color={colors.bg} strokeWidth={sizes.icon.strokeWidth} /> : null}
       <Text className={`text-body ${on ? 'font-brico-extrabold text-bg' : 'font-brico-semibold text-ink'}`}>{label}</Text>

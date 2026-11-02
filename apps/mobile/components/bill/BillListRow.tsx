@@ -29,7 +29,7 @@ export function BillListRow({ restaurant, date, total, state, stateDetail, onPre
       onPress={onPress}
       onLongPress={onLongPress}
       style={{ minHeight: sizes.minTouch }}
-      className="flex-row items-center gap-3 py-3 active:opacity-80"
+      className="flex-row items-center gap-3 py-3 active:opacity-pressed"
     >
       <View className="flex-1 gap-1">
         <Text numberOfLines={1} className="font-brico-bold text-item-name text-ink">

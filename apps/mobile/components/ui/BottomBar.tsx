@@ -48,7 +48,7 @@ export function BottomBar({ activeKey, onChange, tabs = DEFAULT_TABS, action }: 
               accessibilityState={{ selected: active }}
               onPress={() => onChange(t.key)}
               style={{ minHeight: sizes.minTouch }}
-              className="flex-1 items-center justify-center gap-1 pb-2 active:opacity-80"
+              className="flex-1 items-center justify-center gap-1 pb-2 active:opacity-pressed"
             >
               {/* Active indicator: a bar above the icon (shape + weight, not colour alone). */}
               <View

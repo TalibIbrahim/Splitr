@@ -72,7 +72,7 @@ export default function History() {
                   accessibilityLabel={`Delete ${b.restaurantName || 'untitled bill'}`}
                   onPress={() => remove(b.id, b.restaurantName)}
                   style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-                  className="items-center justify-center active:opacity-80"
+                  className="items-center justify-center active:opacity-pressed"
                 >
                   <Trash2 size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
                 </Pressable>

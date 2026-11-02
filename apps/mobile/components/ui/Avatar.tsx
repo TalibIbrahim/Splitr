@@ -98,7 +98,7 @@ export function Avatar({
       accessibilityLabel={label}
       accessibilityState={{ selected: !!selected }}
       style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-      className="items-center justify-center active:opacity-80"
+      className="items-center justify-center active:opacity-pressed"
       onPress={() => {
         if (haptic) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         onPress();

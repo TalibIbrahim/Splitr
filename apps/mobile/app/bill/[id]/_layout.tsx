@@ -55,7 +55,7 @@ export default function BillLayout() {
           accessibilityLabel="Close bill and go Home"
           onPress={() => router.replace(HOME_HREF)}
           style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-          className="items-center justify-center rounded-pill active:opacity-80"
+          className="items-center justify-center rounded-pill active:opacity-pressed"
         >
           <X size={sizes.icon.lg} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
         </Pressable>

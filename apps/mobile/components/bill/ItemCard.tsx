@@ -65,7 +65,7 @@ export function ItemCard({
       onPress={onPress}
       onLongPress={onLongPress}
       style={{ minHeight: sizes.minTouch }}
-      className={`gap-2 rounded-card bg-bg p-4 active:opacity-80 ${border}`}
+      className={`gap-2 rounded-card bg-bg p-4 active:opacity-pressed ${border}`}
     >
       <View className="flex-row items-start justify-between gap-3">
         <Text className="flex-1 font-brico-bold text-item-name text-ink">{name}</Text>

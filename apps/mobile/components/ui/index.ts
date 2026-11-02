@@ -4,6 +4,7 @@ export { Avatar, AvatarStack, type AvatarSize, type AvatarPerson } from './Avata
 export { Pill } from './Pill';
 export { Card, type CardTone } from './Card';
 export { Sheet } from './Sheet';
+export { ModalSheet } from './ModalSheet';
 export { BottomBar, StickyAction, DEFAULT_TABS, type TabKey, type TabItem } from './BottomBar';
 export { TextField } from './TextField';
 export { FilterChip } from './FilterChip';

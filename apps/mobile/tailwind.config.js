@@ -40,6 +40,7 @@ module.exports = {
       borderRadius: { ...tailwindTheme.borderRadius },
       spacing: { ...tailwindTheme.spacing },
       height: { ...tailwindTheme.height },
+      opacity: { ...tailwindTheme.opacity },
       fontSize,
       fontFamily: fontFamilies,
     },

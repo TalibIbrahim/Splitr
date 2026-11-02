@@ -24,7 +24,7 @@ export function ToggleRow({ title, subtitle, on, onChange, children }: ToggleRow
         accessibilityState={{ checked: on }}
         onPress={() => onChange(!on)}
         style={{ minHeight: sizes.minTouch }}
-        className="flex-row items-center gap-3 active:opacity-80"
+        className="flex-row items-center gap-3 active:opacity-pressed"
       >
         <View className="flex-1">
           <Text className="font-brico-extrabold text-item-name text-ink">{title}</Text>

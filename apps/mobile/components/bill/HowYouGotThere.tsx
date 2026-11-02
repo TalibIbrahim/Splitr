@@ -54,7 +54,7 @@ export function HowYouGotThere({ total, lines, defaultExpanded = false }: HowYou
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((v) => !v)}
         style={{ minHeight: sizes.minTouch }}
-        className="flex-row items-center justify-between gap-3 p-4 active:opacity-80"
+        className="flex-row items-center justify-between gap-3 p-4 active:opacity-pressed"
       >
         <Text className="flex-1 font-brico-extrabold text-item-name text-ink">{title}</Text>
         <Animated.View style={{ transform: [{ rotate }] }}>

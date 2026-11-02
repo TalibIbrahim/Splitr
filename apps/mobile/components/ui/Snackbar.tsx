@@ -33,7 +33,7 @@ export function Snackbar({ message, actionLabel, onAction, onDismiss, durationMs
         accessibilityLabel={`${actionLabel}: ${message}`}
         onPress={onAction}
         style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-        className="items-center justify-center px-4 active:opacity-80"
+        className="items-center justify-center px-4 active:opacity-pressed"
       >
         <Text className="font-brico-extrabold text-body text-bg">{actionLabel}</Text>
       </Pressable>
