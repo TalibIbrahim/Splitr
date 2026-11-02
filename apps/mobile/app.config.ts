@@ -14,7 +14,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: APP_ID,
     buildNumber: process.env.IOS_BUILD_NUMBER ?? '1',
-    icon: './assets/expo.icon',
+    icon: './assets/images/icon.png',
     infoPlist: {
       LSApplicationQueriesSchemes: ['whatsapp'],
       NSAppTransportSecurity: { NSAllowsArbitraryLoads: false },
@@ -24,7 +24,7 @@ const config: ExpoConfig = {
     package: APP_ID,
     versionCode: Number(process.env.ANDROID_VERSION_CODE ?? 1),
     adaptiveIcon: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#15131A',
       foregroundImage: './assets/images/android-icon-foreground.png',
       backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -51,7 +51,11 @@ const config: ExpoConfig = {
       {
         backgroundColor: '#FFFFFF',
         image: './assets/images/splash-icon.png',
-        imageWidth: 76,
+        imageWidth: 200,
+        dark: {
+          backgroundColor: '#0F0E12',
+          image: './assets/images/splash-icon-dark.png',
+        },
       },
     ],
     'expo-font',
