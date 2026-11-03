@@ -151,7 +151,7 @@ jobs:
 
   ios:
     needs: [version, test]
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       SPLITR_RELEASE: '1'
@@ -166,7 +166,7 @@ jobs:
           cache: pnpm
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
-          xcode-version: '26.3'
+          xcode-version: '26.6'  # Expo SDK 58's ExpoModulesJSI (Swift 6 mode) fails to compile on 26.3
       - run: pnpm install --frozen-lockfile
 
       - name: Expo prebuild (ios)
