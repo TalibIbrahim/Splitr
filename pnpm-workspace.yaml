@@ -9,3 +9,6 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+
+patchedDependencies:
+  '@infinitered/react-native-mlkit-text-recognition': patches/@infinitered__react-native-mlkit-text-recognition.patch

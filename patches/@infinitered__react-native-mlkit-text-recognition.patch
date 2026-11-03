@@ -1,0 +1,21 @@
+diff --git a/ios/RNMLKitTextRecord.swift b/ios/RNMLKitTextRecord.swift
+index 7672854c2280694a5ad258a515d8f8cc76955ad9..a7a369d119ed0fa2c8d36d37e81e9abdff392f7a 100644
+--- a/ios/RNMLKitTextRecord.swift
++++ b/ios/RNMLKitTextRecord.swift
+@@ -1,6 +1,7 @@
+ import ExpoModulesCore
+ import MLKitCommon
+ import MLKitTextRecognition
++import MLKitTextRecognitionCommon
+ 
+ struct RectRecord: Record {
+     @Field var left: Double = 0.0
+@@ -70,7 +71,7 @@ func mapTextBlockToRecord(_ textBlock: TextBlock) -> BlockRecord {
+     )
+ }
+ 
+-func mapTextToRecord(_ text: Text) -> TextRecord {
++func mapTextToRecord(_ text: MLKitTextRecognitionCommon.Text) -> TextRecord { // qualified: SwiftUI.Text is also visible on iOS 26 SDK
+     return TextRecord(
+         text: text.text,
+         blocks: text.blocks.map(mapTextBlockToRecord)
