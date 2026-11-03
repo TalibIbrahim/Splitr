@@ -39,8 +39,8 @@ export function CrewHeroCard(props: CrewHeroCardProps) {
       </View>
       <Button
         variant="onHero"
-        label="Start tonight's bill"
-        accessibilityLabel={`Start tonight's bill with ${props.crewName}`}
+        label="Scan tonight's bill"
+        accessibilityLabel={`Scan tonight's bill with ${props.crewName}`}
         icon={ScanLine}
         onPress={props.onStartBill}
       />

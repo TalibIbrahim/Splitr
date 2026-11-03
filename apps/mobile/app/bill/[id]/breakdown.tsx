@@ -7,7 +7,7 @@ import { FileQuestion, Info, ReceiptText } from 'lucide-react-native';
 import type { BillBreakdown, Paisa } from '@splitr/calculation-engine';
 import { explainParticipant, explainSettled } from '@splitr/bill-domain';
 import type { Bill } from '@splitr/shared-types';
-import { sizes } from '@splitr/design-tokens';
+import { sizes, spacing } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
 import { announce } from '../../../lib/a11y';
 import {
@@ -158,6 +158,11 @@ export default function BreakdownScreen() {
       ? selected
       : (meId ?? breakdown.participants[0]?.participantId ?? '');
   const selectedShare = breakdown.participants.find((p) => p.participantId === selectedId);
+  // Me first, everyone else in engine order.
+  const orderedParticipants = [
+    ...breakdown.participants.filter((p) => p.participantId === meId),
+    ...breakdown.participants.filter((p) => p.participantId !== meId),
+  ];
   const saving = cardSaving(breakdown.adjustments);
   const savingOffer = offerNameFor(
     breakdown.adjustments.filter((a) => a.kind === 'discount' && a.amount < 0).map((a) => a.label),
@@ -280,7 +285,7 @@ export default function BreakdownScreen() {
 
         {/* People */}
         <View className="flex-row flex-wrap justify-between gap-y-3">
-          {breakdown.participants.map((p) => (
+          {orderedParticipants.map((p) => (
             <View key={p.participantId} style={{ width: '48.5%' }}>
               <PersonCard
                 name={nameOf(p.participantId)}
@@ -293,24 +298,6 @@ export default function BreakdownScreen() {
             </View>
           ))}
         </View>
-
-        {/* How you got there */}
-        {selectedShare ? (
-          settled && settledExplain(bill).kind === 'snapshot-only' ? (
-            <View className="gap-2">
-              <Money amount={selectedShare.roundedTotal} variant="item" />
-              <Text className="font-brico-medium text-body-small text-muted">
-                Settled with an earlier version of Splitr, so the step-by-step isn't available
-              </Text>
-            </View>
-          ) : (
-            <HowYouGotThere
-              key={selectedId}
-              total={selectedShare.roundedTotal}
-              lines={explainParticipant(settledSteps(bill, breakdown, settled), bill, selectedId)}
-            />
-          )
-        ) : null}
 
         {/* Who paid */}
         {settled ? (
@@ -364,10 +351,29 @@ export default function BreakdownScreen() {
             )}
           </View>
         ) : null}
+
+        {/* How you got there */}
+        {selectedShare ? (
+          settled && settledExplain(bill).kind === 'snapshot-only' ? (
+            <View className="gap-2">
+              <Money amount={selectedShare.roundedTotal} variant="item" />
+              <Text className="font-brico-medium text-body-small text-muted">
+                Settled with an earlier version of Splitr, so the step-by-step isn't available
+              </Text>
+            </View>
+          ) : (
+            <HowYouGotThere
+              key={selectedId}
+              total={selectedShare.roundedTotal}
+              {...(selectedId !== meId ? { name: nameOf(selectedId) } : {})}
+              lines={explainParticipant(settledSteps(bill, breakdown, settled), bill, selectedId)}
+            />
+          )
+        ) : null}
       </ScrollView>
 
       {/* Bottom bar */}
-      <View className="gap-2 border-t border-chip bg-bg px-4 pb-3 pt-3" style={{ paddingBottom: insets.bottom }}>
+      <View className="gap-2 border-t border-chip bg-bg px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom, spacing[2]) }}>
         {hint ? (
           <View className="flex-row items-center gap-2">
             <Info size={sizes.icon.sm} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
@@ -378,7 +384,7 @@ export default function BreakdownScreen() {
           <View className="flex-1">
             <Button
               label="Share"
-              variant="outline"
+              variant={settled ? 'primary' : 'outline'}
               size="lg"
               fullWidth
               accessibilityLabel="Share this split"
@@ -388,6 +394,7 @@ export default function BreakdownScreen() {
           <View className="flex-1">
             <Button
               label={primary.label}
+              variant={settled ? 'outline' : 'primary'}
               size="lg"
               fullWidth
               accessibilityLabel={primary.a11y}

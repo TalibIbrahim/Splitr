@@ -107,3 +107,69 @@ export function shuffled<T>(arr: readonly T[], seed: number): T[] {
   }
   return a;
 }
+
+// ───────────────────────── visual-row layout (real-receipt fixtures, P20) ─────────────────────────
+// A receipt is described once, as visual rows of cells. It can then be rendered in two OCR segmentations:
+//   'merged' - one OcrLine per visual row (cells joined by a single space)
+//   'cells'  - one OcrLine per column cell
+export type Segmentation = 'merged' | 'cells';
+export type VCell =
+  | readonly [text: string, x: number]
+  | readonly [text: string, x: number, o: { h?: number; dy?: number; conf?: number }];
+/** gap = vertical distance from the previous row's centre: normal 1.5 x line height, wrap 1.3 x, section 2.2 x. */
+export interface VRow {
+  cells: readonly VCell[];
+  gap: 'normal' | 'wrap' | 'section';
+}
+export const V = (...cells: VCell[]): VRow => ({ cells, gap: 'normal' });
+/** Tight row: a wrapped name continuation directly below the previous row. */
+export const Wrap = (...cells: VCell[]): VRow => ({ cells, gap: 'wrap' });
+/** Row after a visible gap (new section of the receipt). */
+export const Sec = (...cells: VCell[]): VRow => ({ cells, gap: 'section' });
+
+export interface VisualOpts {
+  /** Normal line height in px (default 20). */
+  lh?: number;
+  /** Px per character for line widths (default 10). */
+  cw?: number;
+  imageWidth?: number;
+}
+
+export function layoutVisual(rows: readonly VRow[], seg: Segmentation, opts: VisualOpts = {}): OcrResult {
+  const lh = opts.lh ?? 20;
+  const cw = opts.cw ?? 10;
+  const mult = { normal: 1.5, wrap: 1.3, section: 2.2 } as const;
+  const lines: OcrResult['lines'][number][] = [];
+  let y = 2 * lh;
+  rows.forEach((r, i) => {
+    if (i > 0) y += mult[r.gap] * lh;
+    const parsed = r.cells.map((c) => ({
+      text: c[0],
+      x: c[1],
+      h: c.length === 3 ? (c[2].h ?? lh) : lh,
+      dy: c.length === 3 ? (c[2].dy ?? 0) : 0,
+      conf: c.length === 3 ? c[2].conf : undefined,
+    }));
+    if (seg === 'cells') {
+      for (const c of parsed) {
+        lines.push({
+          text: c.text,
+          frame: { x: c.x, y: y + c.dy - c.h / 2, width: c.text.length * cw, height: c.h },
+          ...(c.conf !== undefined ? { confidence: c.conf } : {}),
+        });
+      }
+    } else {
+      const first = parsed[0];
+      const last = parsed[parsed.length - 1];
+      if (!first || !last) return;
+      const h = Math.max(...parsed.map((c) => c.h));
+      const conf = parsed.map((c) => c.conf).filter((c): c is number => c !== undefined);
+      lines.push({
+        text: parsed.map((c) => c.text).join(' '),
+        frame: { x: first.x, y: y - h / 2, width: Math.max(cw, last.x + last.text.length * cw - first.x), height: h },
+        ...(conf.length ? { confidence: Math.min(...conf) } : {}),
+      });
+    }
+  });
+  return { imageWidth: opts.imageWidth ?? 900, imageHeight: Math.round(y + 3 * lh), lines };
+}

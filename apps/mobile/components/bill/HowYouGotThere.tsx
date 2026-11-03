@@ -21,6 +21,8 @@ interface HowYouGotThereProps {
   total: Paisa;
   lines: readonly ExplainLineView[];
   defaultExpanded?: boolean;
+  /** Someone other than me: title reads "How {name} got to X". */
+  name?: string;
 }
 
 const EMPHASISED: ReadonlySet<ExplainLineView['kind']> = new Set(['items-subtotal', 'exact', 'final']);
@@ -29,7 +31,7 @@ function titleAmount(total: Paisa): string {
   return formatMoney(total).replace(/^Rs\s*/, '');
 }
 
-export function HowYouGotThere({ total, lines, defaultExpanded = false }: HowYouGotThereProps) {
+export function HowYouGotThere({ total, lines, defaultExpanded = false, name }: HowYouGotThereProps) {
   const { colors } = useTheme();
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(defaultExpanded);
@@ -44,7 +46,7 @@ export function HowYouGotThere({ total, lines, defaultExpanded = false }: HowYou
   }, [open, reduced, progress]);
 
   const rotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
-  const title = `How you got to ${titleAmount(total)}`;
+  const title = `How ${name ?? 'you'} got to ${titleAmount(total)}`;
 
   return (
     <View className="rounded-card bg-surface-2">

@@ -29,12 +29,21 @@ describe('P7 date', () => {
     });
   }
 
-  const invalid = ['02/13/2026', '31/04/2026', '29/02/2025', '00/01/2026', '32/01/2026', '15/00/2026', '31 Feb 2026', '30.02.26'];
+  const invalid = ['31/04/2026', '29/02/2025', '00/01/2026', '32/01/2026', '15/00/2026', '31 Feb 2026', '30.02.26'];
   for (const text of invalid) {
     it(`P7 invalid date "${text}" is ignored (no date, no throw)`, () => {
       expect(withDate(`Date: ${text}`).date).toBeUndefined();
     });
   }
+
+  it('P7b invalid day-first but valid month-first uses month-first: "02/13/2026" is 13 Feb 2026, "12/31/2023" is 31 Dec 2023', () => {
+    expect(withDate('Date: 02/13/2026').date).toBe('2026-02-13');
+    expect(withDate('Date: 12/31/2023').date).toBe('2023-12-31');
+  });
+
+  it('P7b day-first still wins when both readings are valid: "02/11/2026" is 2 Nov 2026', () => {
+    expect(withDate('Date: 02/11/2026').date).toBe('2026-11-02');
+  });
 
   it('P7 the date is found anywhere, including the footer after the totals', () => {
     const d = parse([one('Chaman Cafe'), row('Zinger Burger', '650'), row('Grand Total', '650'), one('Printed 02/11/2026 21:43')]);

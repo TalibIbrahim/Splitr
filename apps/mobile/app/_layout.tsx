@@ -14,6 +14,7 @@ import {
 } from '@expo-google-fonts/bricolage-grotesque';
 import { ThemeProvider, useTheme } from '../theme';
 import { useReducedMotion } from '../lib/useReducedMotion';
+import { useUpdateCheck } from '../lib/useUpdateCheck';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +24,7 @@ function Shell() {
   const hydrated = useSplitr((s) => s.hydrated);
   const recovery = useSplitr((s) => s.recovery);
   const hasMe = useSplitr((s) => s.root.me !== null);
+  useUpdateCheck();
 
   return (
     <>
@@ -45,6 +47,7 @@ function Shell() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="crew/[id]" />
             <Stack.Screen name="bill/new" />
+            <Stack.Screen name="scan" />
             <Stack.Screen name="balances" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="bill/[id]" />

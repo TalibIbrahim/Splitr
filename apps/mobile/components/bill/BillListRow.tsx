@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { Check, ChevronRight } from 'lucide-react-native';
 import type { Paisa } from '@splitr/calculation-engine';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
@@ -19,14 +19,16 @@ interface BillListRowProps {
   onPress: () => void;
   /** Long-press shortcut (e.g. delete); a visible control must also exist. */
   onLongPress?: () => void;
+  /** Hide the trailing chevron when another trailing control (e.g. delete) sits beside the row. */
+  hideChevron?: boolean;
 }
 
-export function BillListRow({ restaurant, date, total, state, stateDetail, onPress, onLongPress }: BillListRowProps) {
+export function BillListRow({ restaurant, date, total, state, stateDetail, onPress, onLongPress, hideChevron }: BillListRowProps) {
   const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${restaurant}, ${date}, ${total === undefined ? '' : `${formatMoney(total)}, `}${state.replace('-', ' ')}`}
+      accessibilityLabel={`${restaurant}, ${date}, ${total === undefined ? '' : `${formatMoney(total)}, `}${state === 'settled' ? 'Settled' : state.replace('-', ' ')}${stateDetail ? `, ${stateDetail}` : ''}`}
       onPress={onPress}
       onLongPress={onLongPress}
       style={{ minHeight: sizes.minTouch }}
@@ -37,10 +39,19 @@ export function BillListRow({ restaurant, date, total, state, stateDetail, onPre
           {restaurant}
         </Text>
         <Text className="font-brico-semibold text-meta text-muted">{date}</Text>
-        <StatePill state={state} detail={stateDetail} />
+        {state === 'settled' ? (
+          <View className="flex-row items-center gap-1">
+            <Check size={sizes.icon.sm} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
+            <Text className="font-brico-semibold text-meta text-muted">Settled</Text>
+          </View>
+        ) : (
+          <StatePill state={state} detail={stateDetail} />
+        )}
       </View>
       {total !== undefined ? <Money amount={total} variant="item" /> : null}
-      <ChevronRight size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
+      {hideChevron ? null : (
+        <ChevronRight size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
+      )}
     </Pressable>
   );
 }

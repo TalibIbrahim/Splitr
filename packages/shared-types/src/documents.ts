@@ -101,7 +101,21 @@ export const PersistedRootSchema = z.object({
   groups: arr(GroupSchema),
   bills: arr(BillSchema),
   /** Phase 4: optional so data written by earlier versions still validates. */
-  meta: z.object({ lastBackupAt: TimestampSchema.optional() }).optional(),
+  meta: z
+    .object({
+      lastBackupAt: TimestampSchema.optional(),
+      /** D36: update-notice state. All optional so older data still validates. */
+      updateCheck: z
+        .object({
+          enabled: z.boolean().optional(),
+          lastCheckedAt: TimestampSchema.optional(),
+          latestVersion: z.string().optional(),
+          latestUrl: z.string().optional(),
+          dismissedVersion: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
   /** Phase 5: card labels only (never numbers) and user-added offers. Optional for older data. */
   cards: z.array(z.object({ id: IdSchema, label: z.string().min(1) })).optional(),
   userOffers: z.array(CardOfferSchema).optional(),

@@ -21,7 +21,21 @@ import {
 } from '@splitr/bill-domain';
 import { lahoreOffers } from '@splitr/offers-data';
 import type { Bill, CardOffer, Group, Person } from '@splitr/shared-types';
+import { compareSemver } from '../lib/update-check';
 import type { SplitrNotice, SplitrState } from './create-store';
+
+/** D36. The release to advertise: newer than the running version and not dismissed; null otherwise. */
+export function selectUpdateBanner(
+  currentVersion: string,
+): (s: SplitrState) => { version: string; url: string } | null {
+  return (s) => {
+    const u = s.root.meta?.updateCheck;
+    if (!u?.latestVersion || !u.latestUrl) return null;
+    if (u.dismissedVersion === u.latestVersion) return null;
+    if (compareSemver(u.latestVersion, currentVersion) <= 0) return null;
+    return { version: u.latestVersion, url: u.latestUrl };
+  };
+}
 
 const isLive = (d: { deletedAt?: string | null }): boolean => (d.deletedAt ?? null) === null;
 

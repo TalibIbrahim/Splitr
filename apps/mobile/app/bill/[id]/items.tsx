@@ -184,6 +184,11 @@ function ItemsBody({
               </Pressable>
             </View>
           ) : null}
+          {items.length === 0 ? (
+            <Text className="px-4 pt-3 text-center font-brico-semibold text-meta text-muted">
+              Add at least one item to continue
+            </Text>
+          ) : null}
           <StickyAction
             label="Next: assign"
             accessibilityLabel="Next: assign items to people"
@@ -232,24 +237,27 @@ function ItemsBody({
               </Pressable>
             ) : null}
 
-            <Card tone="surface2" className="flex-row items-center justify-between">
-              <View>
-                <Text className="font-brico-semibold text-meta text-muted">Items subtotal</Text>
-                <Text className="font-brico-medium text-body-small text-muted">
-                  {items.length === 1 ? '1 item' : `${items.length} items`}
-                </Text>
+            <Card tone="surface2" className="gap-3">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="font-brico-semibold text-meta text-muted">Items subtotal</Text>
+                  <Text className="font-brico-medium text-body-small text-muted">
+                    {items.length === 1 ? '1 item' : `${items.length} items`}
+                  </Text>
+                </View>
+                <Money amount={sumLineTotals(items)} variant="card" />
               </View>
-              <Money amount={sumLineTotals(items)} variant="card" />
+              <View className="flex-row">
+                <Button
+                  label="Scan more"
+                  accessibilityLabel="Scan more of the receipt"
+                  icon={ScanLine}
+                  variant="outline"
+                  size="md"
+                  onPress={() => void scan.start('scan')}
+                />
+              </View>
             </Card>
-
-            <Button
-              label="Scan more"
-              accessibilityLabel="Scan more of the receipt"
-              icon={ScanLine}
-              variant="outline"
-              fullWidth
-              onPress={() => void scan.start('scan')}
-            />
 
             <View className="gap-3">
               <Field
@@ -283,7 +291,8 @@ function ItemsBody({
                 label="Add"
                 accessibilityLabel="Add item"
                 icon={Plus}
-                size="lg"
+                variant="outline"
+                size="md"
                 fullWidth
                 onPress={add}
               />

@@ -51,10 +51,12 @@ export const DraftItemSchema = z.object({
 export type DraftItem = z.infer<typeof DraftItemSchema>;
 
 export const DraftChargeSchema = z.object({
-  kind: z.enum(['discount', 'tax', 'service', 'tip']),
+  kind: z.enum(['discount', 'tax', 'service', 'tip', 'fee']),
   label: z.string(),
   amount: PaisaSchema,
   rateBp: BasisPointsSchema.optional(),
+  /** Shown for information only (tax already included in the prices, P19); produces no adjustment. */
+  informational: z.boolean().optional(),
   confidence: DraftConfidenceSchema,
   sourceText: z.string(),
 });
@@ -70,6 +72,20 @@ export const ReceiptCheckSchema = z.object({
 });
 export type ReceiptCheck = z.infer<typeof ReceiptCheckSchema>;
 
+/** P18. One payment method's taxes, discounts and printed total. */
+export const VariantTotalsSchema = z.object({
+  taxes: arr(DraftChargeSchema),
+  discounts: arr(DraftChargeSchema),
+  printedTotal: PaisaSchema.optional(),
+});
+export type VariantTotals = z.infer<typeof VariantTotalsSchema>;
+
+export const ReceiptVariantsSchema = z.object({
+  card: VariantTotalsSchema.optional(),
+  cash: VariantTotalsSchema.optional(),
+});
+export type ReceiptVariants = z.infer<typeof ReceiptVariantsSchema>;
+
 export const ReceiptDraftSchema = z.object({
   restaurantName: z.string().optional(),
   date: IsoDateSchema.optional(),
@@ -79,5 +95,11 @@ export const ReceiptDraftSchema = z.object({
   printedTotal: PaisaSchema.optional(),
   checks: arr(ReceiptCheckSchema),
   unparsedRows: arr(z.string()),
+  /** P18: card and cash prices printed side by side. */
+  variants: ReceiptVariantsSchema.optional(),
+  /** P18: payment method hinted by the receipt text. */
+  paidWith: z.enum(['card', 'cash']).nullable().optional(),
+  /** P19: the prices already include tax. */
+  taxInclusive: z.boolean().optional(),
 });
 export type ReceiptDraft = z.infer<typeof ReceiptDraftSchema>;

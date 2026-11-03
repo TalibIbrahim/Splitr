@@ -41,14 +41,14 @@ export default function History() {
     ({ item: b }) => (
       <View className="flex-row items-center">
         <View className="flex-1">
-          <ConnectedBillRow billId={b.id} onLongPress={() => remove(b.id, b.restaurantName)} />
+          <ConnectedBillRow billId={b.id} onLongPress={() => remove(b.id, b.restaurantName)} hideChevron />
         </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Delete ${b.restaurantName || 'untitled bill'}`}
           onPress={() => remove(b.id, b.restaurantName)}
           style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
-          className="items-center justify-center active:opacity-pressed"
+          className="ml-1 items-center justify-center active:opacity-pressed"
         >
           <Trash2 size={sizes.icon.md} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
         </Pressable>

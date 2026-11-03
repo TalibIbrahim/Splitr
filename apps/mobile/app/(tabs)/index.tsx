@@ -3,7 +3,7 @@ import { href } from '../../lib/routes';
 import { FlatList, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Plus, Receipt, Settings } from 'lucide-react-native';
+import { Receipt, Settings } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import {
   selectActiveBills,
@@ -13,8 +13,8 @@ import {
   useSplitr,
 } from '../../store';
 import { useTheme } from '../../theme';
-import { Button } from '../../components/ui';
 import { BalanceTile, CrewHeroCard, EmptyState } from '../../components/bill';
+import { UpdateBanner } from '../../components/UpdateBanner';
 import { ConnectedBillRow } from '../../components/ConnectedBillRow';
 
 const LATELY_COUNT = 5;
@@ -60,11 +60,13 @@ export default function Home() {
         </Pressable>
       </View>
 
+      <UpdateBanner />
+
       {group ? (
         <CrewHeroCard
           crewName={group.name}
           people={members}
-          onStartBill={() => router.push(href(`/bill/new?groupId=${group.id}`))}
+          onStartBill={() => router.push(href(`/scan?groupId=${group.id}`))}
         />
       ) : (
         <CrewHeroCard variant="empty" onMakeCrew={() => router.push(href('/crew/new'))} />
@@ -78,17 +80,19 @@ export default function Home() {
       <View className="flex-row items-center justify-between">
         <Text
           accessibilityRole="header"
-          className="font-brico-extrabold text-screen-title text-ink"
+          className="font-brico-extrabold text-item-name text-ink"
         >
           Lately
         </Text>
-        <Button
-          variant="outline"
-          label="New bill"
-          accessibilityLabel="Start a new bill"
-          icon={Plus}
-          onPress={() => router.push(href('/bill/new'))}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="See all bills in History"
+          onPress={() => router.push(href('/history'))}
+          style={{ minHeight: sizes.minTouch }}
+          className="justify-center pl-3 active:opacity-pressed"
+        >
+          <Text className="font-brico-bold text-body-small text-muted">See all</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -104,10 +108,15 @@ export default function Home() {
           <EmptyState
             icon={Receipt}
             title="No bills yet"
-            body="Your recent bills show up here."
+            body="Scan a receipt and your recent bills show up here."
             action={{
-              label: 'Start a bill',
-              accessibilityLabel: 'Start your first bill',
+              label: 'Scan a receipt',
+              accessibilityLabel: 'Scan your first receipt',
+              onPress: () => router.push(href('/scan')),
+            }}
+            secondary={{
+              label: 'Type it in',
+              accessibilityLabel: 'Start a bill and type the items in by hand',
               onPress: () => router.push(href('/bill/new')),
             }}
           />

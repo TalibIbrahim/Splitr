@@ -118,6 +118,11 @@ export interface SplitrActions {
   /** E6. Replaces or merges the local root with an imported one, then re-runs the transfer-status invariant. */
   restoreBackup(root: PersistedRoot, mode: RestoreMode): void;
   setLastBackupAt(iso: string): void;
+  /** D36. Stores the newest known release and when it was checked. */
+  recordUpdateCheck(r: { latestVersion: string; latestUrl: string; checkedAt: string }): void;
+  /** D36. Hides the update banner for this version. */
+  dismissUpdate(version: string): void;
+  setUpdateChecksEnabled(enabled: boolean): void;
   /** Phase 5. Trims; empty is ignored (returns ''); a case-insensitive duplicate returns the existing id. */
   addCardLabel(label: string): string;
   removeCardLabel(id: string): void;
@@ -620,6 +625,24 @@ export function createSplitrStore(deps: SplitrDeps): SplitrStore {
 
       setLastBackupAt(iso) {
         setRoot((r) => ({ ...r, meta: { ...r.meta, lastBackupAt: iso } }));
+      },
+
+      recordUpdateCheck({ latestVersion, latestUrl, checkedAt }) {
+        setRoot((r) => ({
+          ...r,
+          meta: { ...r.meta, updateCheck: { ...r.meta?.updateCheck, latestVersion, latestUrl, lastCheckedAt: checkedAt } },
+        }));
+      },
+
+      dismissUpdate(version) {
+        setRoot((r) => ({
+          ...r,
+          meta: { ...r.meta, updateCheck: { ...r.meta?.updateCheck, dismissedVersion: version } },
+        }));
+      },
+
+      setUpdateChecksEnabled(enabled) {
+        setRoot((r) => ({ ...r, meta: { ...r.meta, updateCheck: { ...r.meta?.updateCheck, enabled } } }));
       },
 
       attachReceipt(billId, r) {

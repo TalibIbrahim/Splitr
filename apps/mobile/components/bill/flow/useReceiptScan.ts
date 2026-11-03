@@ -4,6 +4,7 @@ import { splitrStore } from '../../../store';
 import { captureReceipt } from '../../../lib/capture';
 import { recognizeReceipt } from '../../../lib/ocr';
 import { saveReceiptImage } from '../../../lib/receipt-files';
+import { setLastScan } from '../../../lib/last-scan';
 
 export type ScanMode = 'scan' | 'camera' | 'library';
 
@@ -39,6 +40,7 @@ export function useReceiptScan({ ensureBill, onDone }: Options) {
         setState({ kind: r.reason === 'unavailable' ? 'unavailable' : 'failed' });
         return;
       }
+      setLastScan(r.ocr);
       const draft = parseReceipt(r.ocr);
       splitrStore.getState().attachReceipt(billId, { imageUri: uri, draft });
       saved.current = null;

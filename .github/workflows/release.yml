@@ -126,15 +126,15 @@ jobs:
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Verify privacy permissions (D31)
+      - name: Verify privacy permissions (D31/D36)
         run: |
           set -eo pipefail
           M=$(find apps/mobile/android/app/build/intermediates -path '*merged_manifests/release*' -name AndroidManifest.xml | head -n 1)
           [ -n "$M" ] || { echo "::error::merged release manifest not found"; exit 1; }
           echo "Checking $M"
           grep -n 'uses-permission' "$M" || true
-          if grep -E 'uses-permission[^>]*(RECORD_AUDIO|android.permission.INTERNET)' "$M"; then
-            echo "::error::Release manifest declares a blocked permission (RECORD_AUDIO or INTERNET)"
+          if grep -E 'uses-permission[^>]*RECORD_AUDIO' "$M"; then
+            echo "::error::Release manifest declares a blocked permission (RECORD_AUDIO)"
             exit 1
           fi
 

@@ -1,8 +1,7 @@
-import { toPaisa, type Paisa } from '@splitr/calculation-engine';
 import { parseRupees } from '@splitr/bill-domain';
 import type { DraftFlag, DraftItem, ReceiptDraft } from '@splitr/shared-types';
 import { toRupeeInputText } from '../../../lib/format-money';
-import { parseQty, sumLineTotals } from '../../../lib/sums';
+import { parseQty } from '../../../lib/sums';
 
 /** One editable line of the review screen: raw text the user can type into, plus the draft item it came from. */
 export interface DraftRow {
@@ -84,32 +83,4 @@ export function workingDraft(base: ReceiptDraft, rows: readonly DraftRow[]): Rec
     if (it) items.push(it);
   }
   return { ...base, items };
-}
-
-export interface LiveCheck {
-  kind: 'items-vs-subtotal' | 'summary-vs-total';
-  ok: boolean;
-  /** actual − expected, in paisa. */
-  difference: Paisa;
-}
-
-/**
- * Display-only checks that follow the user's edits. The parser's checks are for the scan as read;
- * here the item sum is re-added so the pills do not go stale. The engine still decides all real money.
- */
-export function liveChecks(base: ReceiptDraft, working: ReceiptDraft): LiveCheck[] {
-  const out: LiveCheck[] = [];
-  const sum = sumLineTotals(working.items);
-  const origSum = sumLineTotals(base.items);
-  if (base.printedSubtotal !== undefined) {
-    const d = sum - base.printedSubtotal;
-    out.push({ kind: 'items-vs-subtotal', ok: d === 0, difference: toPaisa(d) });
-  }
-  const total = base.checks.find((c) => c.kind === 'summary-vs-total');
-  if (total) {
-    const actual = base.printedSubtotal === undefined ? total.actual + (sum - origSum) : total.actual;
-    const d = actual - total.expected;
-    out.push({ kind: 'summary-vs-total', ok: d === 0, difference: toPaisa(d) });
-  }
-  return out;
 }

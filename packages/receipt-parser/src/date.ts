@@ -14,13 +14,15 @@ function isoOrNull(day: number, month: number, year: number): string | null {
 
 /**
  * P7. Finds the first valid day-first date in `text`: `dd/mm/yyyy`, `dd-mm-yyyy`, `dd.mm.yy` or `d Mon yyyy`.
- * Two-digit years become 20yy. Invalid dates (e.g. 31/02/2026) are skipped. Returns an ISO `YYYY-MM-DD` date.
+ * Two-digit years become 20yy. A date invalid day-first but valid month-first (12/31/2023) is read month-first (P7b). Other invalid dates are skipped. Returns an ISO `YYYY-MM-DD` date.
  */
 export function parseDate(text: string): string | undefined {
   const found: { index: number; iso: string }[] = [];
   for (const m of text.matchAll(NUMERIC)) {
     const year = m[3] ?? '';
-    const iso = isoOrNull(Number(m[1]), Number(m[2]), year.length === 2 ? 2000 + Number(year) : Number(year));
+    const y = year.length === 2 ? 2000 + Number(year) : Number(year);
+    // P7b: day-first, then month-first when day-first is invalid.
+    const iso = isoOrNull(Number(m[1]), Number(m[2]), y) ?? isoOrNull(Number(m[2]), Number(m[1]), y);
     if (iso !== null) found.push({ index: m.index ?? 0, iso });
   }
   for (const m of text.matchAll(NAMED)) {

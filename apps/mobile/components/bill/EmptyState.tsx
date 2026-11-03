@@ -8,10 +8,11 @@ interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
   body: string;
+  secondary?: { label: string; accessibilityLabel?: string; onPress: () => void };
   action?: { label: string; accessibilityLabel?: string; onPress: () => void };
 }
 
-export function EmptyState({ icon: Icon, title, body, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, body, action, secondary }: EmptyStateProps) {
   const { colors } = useTheme();
   return (
     <View className="items-center gap-3 px-6 py-8">
@@ -28,6 +29,14 @@ export function EmptyState({ icon: Icon, title, body, action }: EmptyStateProps)
           label={action.label}
           accessibilityLabel={action.accessibilityLabel ?? action.label}
           onPress={action.onPress}
+        />
+      ) : null}
+      {secondary ? (
+        <Button
+          variant="outline"
+          label={secondary.label}
+          accessibilityLabel={secondary.accessibilityLabel ?? secondary.label}
+          onPress={secondary.onPress}
         />
       ) : null}
     </View>

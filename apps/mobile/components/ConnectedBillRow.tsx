@@ -14,7 +14,7 @@ export function useOpenBill(): (id: string, state: string | undefined) => void {
 }
 
 /** A BillListRow fed entirely from store selectors. */
-export function ConnectedBillRow({ billId, onLongPress }: { billId: string; onLongPress?: () => void }) {
+export function ConnectedBillRow({ billId, onLongPress, hideChevron }: { billId: string; onLongPress?: () => void; hideChevron?: boolean }) {
   const bill = useSplitr(selectBill(billId));
   const summary = useSplitr(selectBillSummary(billId));
   const open = useOpenBill();
@@ -32,6 +32,7 @@ export function ConnectedBillRow({ billId, onLongPress }: { billId: string; onLo
       stateDetail={left}
       onPress={() => open(billId, state)}
       onLongPress={onLongPress}
+      hideChevron={hideChevron}
     />
   );
 }

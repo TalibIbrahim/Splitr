@@ -30,7 +30,7 @@ export {
 } from './transfers';
 export { canSettle, settleBill, reopenBill, explainSettled } from './settle';
 export { shareSummary } from './share';
-export { draftToBillPatch, type BillPatch } from './draft';
+export { draftToBillPatch, draftChecks, type BillPatch } from './draft';
 export {
   normalizeRestaurant,
   offersForRestaurant,

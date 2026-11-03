@@ -20,6 +20,10 @@ interface AvatarProps {
   selected?: boolean;
   /** Running subtotal shown under the avatar (Money meta). */
   subtitle?: Paisa;
+  /** Show the first name (meta, truncated to the avatar width) under the circle. */
+  showName?: boolean;
+  /** Subtotal emphasis: 'body' for the selected person, 'meta' otherwise. */
+  subtitleVariant?: 'meta' | 'body';
   onPress?: () => void;
   /** Light haptic on press (policy: only on assign). */
   haptic?: boolean;
@@ -63,6 +67,8 @@ export function Avatar({
   isCurrentUser,
   selected,
   subtitle,
+  showName,
+  subtitleVariant = 'meta',
   onPress,
   haptic,
   accessibilityLabel,
@@ -85,7 +91,16 @@ export function Avatar({
   const content = (
     <View className="items-center gap-1">
       {body}
-      {subtitle !== undefined ? <Money amount={subtitle} variant="meta" /> : null}
+      {showName ? (
+        <Text
+          numberOfLines={1}
+          style={{ maxWidth: sizes.avatar[size] + (sizes.selectedRing.gap + sizes.selectedRing.width) * 2 }}
+          className="font-brico-semibold text-meta text-muted"
+        >
+          {name.trim().split(/\s+/)[0] ?? name}
+        </Text>
+      ) : null}
+      {subtitle !== undefined ? <Money amount={subtitle} variant={subtitleVariant} /> : null}
     </View>
   );
 

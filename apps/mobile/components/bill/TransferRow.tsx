@@ -21,10 +21,8 @@ export function TransferRow({ from, to, amount, paid, onTogglePaid }: TransferRo
 
   return (
     <View className="flex-row items-center justify-between gap-3 py-2">
-      <View className="flex-1 gap-0.5">
-        <Text className="font-brico-bold text-body text-ink">{route}</Text>
-        <Money amount={amount} variant="meta" />
-      </View>
+      <Text className="flex-1 font-brico-bold text-body-small text-ink">{route}</Text>
+      <Money amount={amount} variant="item" />
       <Pressable
         accessibilityRole="checkbox"
         accessibilityLabel={`${route}, ${formatMoney(amount)}, ${paid ? 'paid. Tap to undo' : 'not paid. Mark paid'}`}

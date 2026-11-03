@@ -99,5 +99,11 @@ export function removeSpans(text: string, spans: readonly { start: number; end: 
 export function lineAmount(text: string, tokens: readonly AmountToken[] = findAmountTokens(text)): AmountToken | undefined {
   const last = tokens[tokens.length - 1];
   if (last === undefined) return undefined;
-  return /^\s*(?:\/-|rs\.?|pkr)*\s*$/i.test(text.slice(last.end)) ? last : undefined;
+  return /^(?:\s*(?:\/-|\(rs\.?\)|rs\.?|pkr))*\s*$/i.test(text.slice(last.end)) ? last : undefined;
+}
+
+/** P17. The `(Rs)` / `Rs` / `PKR` / `/-` suffix that follows the last amount of a row, as a span to remove from names. */
+export function trailingSuffix(text: string): { start: number; end: number }[] {
+  const m = /(?:\s*(?:\/-|\(rs\.?\)|rs\.?|pkr))+\s*$/i.exec(text);
+  return m === null || m[0].trim() === '' ? [] : [{ start: m.index, end: m.index + m[0].length }];
 }

@@ -25,7 +25,7 @@ export function BalanceTile({ kind, amount, onPress }: BalanceTileProps) {
         <Icon size={sizes.icon.md} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
         <Text className="font-brico-bold text-body-small text-ink">{label}</Text>
       </View>
-      <Money amount={amount} variant="card" />
+      <Money amount={amount} variant="card" muted={amount === 0} />
     </>
   );
   const cls = 'flex-1 gap-1 rounded-card bg-surface-2 p-4';

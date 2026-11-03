@@ -270,16 +270,50 @@ function AssignBody({ id, bill, preview }: { id: string; bill: Bill; preview: It
   return (
     <FlowScreen
       footer={
-        <StickyAction
-          label="See the split"
-          accessibilityLabel={
-            left > 0 ? `See the split. ${left} items left to assign` : 'See the split'
-          }
-          badge={left > 0 ? `${left} left` : undefined}
-          onPress={seeSplit}
-        />
+        <>
+          {hasUnassigned ? (
+            <View className="px-4 pt-3">
+              <Button
+                label="Split the rest between everyone"
+                accessibilityLabel="Split all unassigned items equally between everyone"
+                variant="outline"
+                size="md"
+                icon={Wand2}
+                fullWidth
+                onPress={() => act().assignRemaining(id)}
+              />
+            </View>
+          ) : null}
+          <StickyAction
+            label="See the split"
+            accessibilityLabel={
+              left > 0 ? `See the split. ${left} items left to assign` : 'See the split'
+            }
+            badge={left > 0 ? `${left} left` : undefined}
+            onPress={seeSplit}
+          />
+        </>
       }
     >
+      <View className="gap-2 bg-bg px-4 pb-3 pt-3">
+        <AssignAvatarRow
+          people={avatarPeople}
+          selectedId={selected?.id ?? null}
+          onSelect={setSelectedId}
+        />
+        {selected ? (
+          <View className="gap-1">
+            <Text className="font-brico-medium text-body-small text-ink">
+              {`Assigning for ${selected.isCurrentUser ? 'you' : selected.name}`}
+            </Text>
+            <Text className="font-brico-semibold text-meta text-muted">
+              Long-press an item to split it unevenly
+            </Text>
+          </View>
+        ) : (
+          <Text className="font-brico-semibold text-meta text-muted">Pick who is eating.</Text>
+        )}
+      </View>
       <FlatList
         ref={listRef}
         data={bill.items}
@@ -287,32 +321,7 @@ function AssignBody({ id, bill, preview }: { id: string; bill: Bill; preview: It
         renderItem={renderItem}
         extraData={renderItem}
         onScrollToIndexFailed={onScrollToIndexFailed}
-        ListHeaderComponent={
-          <View className="gap-4 pb-4">
-            <AssignAvatarRow
-              people={avatarPeople}
-              selectedId={selected?.id ?? null}
-              onSelect={setSelectedId}
-            />
-            <Text className="font-brico-semibold text-meta text-muted">
-              {selected
-                ? `Tap items ${selected.isCurrentUser ? 'you' : selected.name} had. Long-press to split unevenly.`
-                : 'Pick who is eating.'}
-            </Text>
-
-            {hasUnassigned ? (
-              <Button
-                label="Split the rest between everyone"
-                accessibilityLabel="Split all unassigned items equally between everyone"
-                variant="outline"
-                icon={Wand2}
-                fullWidth
-                onPress={() => act().assignRemaining(id)}
-              />
-            ) : null}
-          </View>
-        }
-        contentContainerClassName="px-4 pb-6 pt-3"
+        contentContainerClassName="px-4 pb-6 pt-1"
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
         windowSize={7}

@@ -26,17 +26,20 @@ interface MoneyProps {
   onHero?: boolean;
   /** Amount sits on the accent fill (the current user's card). */
   onAccent?: boolean;
+  /** De-emphasise (e.g. a zero balance): muted text colour. */
+  muted?: boolean;
   className?: string;
 }
 
-function colorClass(variant: MoneyVariant, onInk?: boolean, onHero?: boolean, onAccent?: boolean): string {
+function colorClass(variant: MoneyVariant, onInk?: boolean, onHero?: boolean, onAccent?: boolean, muted?: boolean): string {
+  if (muted) return 'text-muted';
   if (onAccent) return 'text-on-accent';
   if (onHero) return variant === 'meta' ? 'text-muted-on-hero' : 'text-on-hero';
   if (onInk) return variant === 'meta' ? 'text-muted-on-ink' : 'text-bg';
   return variant === 'meta' ? 'text-muted' : 'text-ink';
 }
 
-export function Money({ amount, variant = 'body', showSign, onInk, onHero, onAccent, className }: MoneyProps) {
+export function Money({ amount, variant = 'body', showSign, onInk, onHero, onAccent, muted, className }: MoneyProps) {
   const t = typeScale[VARIANT_STYLE[variant]];
   const reduced = useReducedMotion();
   const opacity = useRef(new Animated.Value(1)).current;
@@ -70,7 +73,7 @@ export function Money({ amount, variant = 'body', showSign, onInk, onHero, onAcc
     <Animated.Text
       accessibilityLabel={moneyA11yLabel(amount)}
       accessibilityRole="text"
-      className={`${colorClass(variant, onInk, onHero, onAccent)} ${className ?? ''}`}
+      className={`${colorClass(variant, onInk, onHero, onAccent, muted)} ${className ?? ''}`}
       style={[style, { opacity }]}
     >
       {formatMoney(amount, { showSign })}

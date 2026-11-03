@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { ChevronDown, ChevronUp, Info, Plus, ScanLine, ZoomIn } from 'lucide-react-native';
 import { toPaisa } from '@splitr/calculation-engine';
-import { draftToBillPatch } from '@splitr/bill-domain';
+import { draftChecks, draftToBillPatch } from '@splitr/bill-domain';
 import type { Bill, DraftCharge, ReceiptDraft } from '@splitr/shared-types';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../../theme';
@@ -17,6 +17,8 @@ import { EmptyState } from '../../../components/bill';
 import { FlowScreen } from '../../../components/bill/flow/FlowScreen';
 import { ToggleRow } from '../../../components/bill/flow/ToggleRow';
 import { CheckPill } from '../../../components/bill/flow/CheckPill';
+import { PaymentChoice, type PayChoice } from '../../../components/bill/flow/PaymentChoice';
+import { TableChips } from '../../../components/bill/flow/TableChips';
 import { DraftItemRow } from '../../../components/bill/flow/DraftItemRow';
 import { ReceiptViewer } from '../../../components/bill/flow/ReceiptViewer';
 import { adjustmentSummary } from '../../../components/bill/flow/adjustmentText';
@@ -24,7 +26,6 @@ import { BillNotFound, useBillRoute } from '../../../components/bill/flow/BillGa
 import { billHref } from '../../../components/bill/flow/nav';
 import {
   blankRow,
-  liveChecks,
   rowFromItem,
   rowValid,
   workingDraft,
@@ -54,6 +55,7 @@ const CHARGE_WORD: Record<DraftCharge['kind'], string> = {
   tax: 'Tax',
   service: 'Service charge',
   tip: 'Tip',
+  fee: 'Fee',
 };
 
 function SectionTitle({ children }: { children: string }) {
@@ -89,8 +91,8 @@ function ReviewBody({
   const [askMode, setAskMode] = useState(false);
 
   const billName = bill.restaurantName.trim();
-  const nameBlank = billName.length === 0;
-  const suggestName = draft.restaurantName && draft.restaurantName !== billName ? draft.restaurantName : null;
+  const nameBlank = billName.length === 0 || billName === 'Untitled bill';
+  const suggestName = draft.restaurantName && draft.restaurantName !== billName && !nameBlank ? draft.restaurantName : null;
   const suggestDate = draft.date && draft.date !== bill.date ? draft.date : null;
   const [useName, setUseName] = useState(false);
   const [useDate, setUseDate] = useState(false);
@@ -105,22 +107,26 @@ function ReviewBody({
   };
 
   const working = useMemo(() => workingDraft(draft, rows), [draft, rows]);
-  const checks = useMemo(() => liveChecks(draft, working), [draft, working]);
   const invalid = rows.filter((r) => !rowValid(r)).length;
   const lowLeft = rows.filter((r) => r.src?.confidence === 'low' && !r.touched).length;
+
+  const [paidWith, setPaidWith] = useState<PayChoice>(draft.paidWith ?? 'card');
+  const variants = draft.variants;
+  // Follows the user's edits and the Card/Cash choice (phase2b §2.1).
+  const checks = useMemo(() => draftChecks(working, paidWith), [working, paidWith]);
 
   // Preview of how charges will be applied. Ids are throwaway; the real patch is built on Apply.
   const preview = useMemo(() => {
     let n = 0;
-    return draftToBillPatch(working, () => `preview-${n++}`);
-  }, [working]);
+    return draftToBillPatch(working, () => `preview-${n++}`, { paidWith });
+  }, [working, paidWith]);
 
   const hasItems = bill.items.length > 0;
   const subtotalCheck = checks.find((c) => c.kind === 'items-vs-subtotal');
   const totalCheck = checks.find((c) => c.kind === 'summary-vs-total');
 
   const apply = (replaceItems: boolean) => {
-    const patch = draftToBillPatch(working, randomUUID);
+    const patch = draftToBillPatch(working, randomUUID, { paidWith });
     const name = nameBlank ? draft.restaurantName : useName ? suggestName : undefined;
     splitrStore.getState().applyDraft(id, patch, {
       replaceItems,
@@ -177,6 +183,8 @@ function ReviewBody({
           </Text>
         </View>
 
+        <TableChips bill={bill} />
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="View the receipt photo full screen"
@@ -184,7 +192,7 @@ function ReviewBody({
           style={{ minHeight: sizes.minTouch }}
           className="overflow-hidden rounded-card bg-surface-2 active:opacity-pressed"
         >
-          <Image source={{ uri: imageUri }} resizeMode="cover" accessibilityIgnoresInvertColors className="h-40 w-full" />
+          <Image source={{ uri: imageUri }} resizeMode="cover" accessibilityIgnoresInvertColors className="h-24 w-full" />
           <View className="flex-row items-center gap-2 px-4 py-2">
             <ZoomIn size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
             <Text className="font-brico-bold text-body-small text-ink">{moreUris.length > 0 ? `Tap to view all ${moreUris.length + 1} photos` : 'Tap to view full size'}</Text>
@@ -214,6 +222,15 @@ function ReviewBody({
           />
         ) : null}
 
+        {draft.taxInclusive ? (
+          <View className="flex-row items-start gap-2 rounded-button bg-chip p-3">
+            <Info size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
+            <Text className="flex-1 font-brico-bold text-body-small text-ink">
+              Prices already include tax. The tax shown is for information and is not added again.
+            </Text>
+          </View>
+        ) : null}
+
         <View className="gap-2">
           <SectionTitle>Checks</SectionTitle>
           {subtotalCheck ? (
@@ -239,19 +256,30 @@ function ReviewBody({
               No subtotal or total was found on the receipt, so there is nothing to check against.
             </Text>
           ) : null}
-          {lowLeft > 0 ? (
-            <View className="flex-row items-center gap-1 self-start rounded-button bg-chip px-3 py-2">
-              <Info size={sizes.icon.sm} color={colors.ink} strokeWidth={sizes.icon.strokeWidth} />
-              <Text className="font-brico-bold text-body-small text-ink">
-                {lowLeft === 1 ? '1 item to check' : `${lowLeft} items to check`}
-              </Text>
-            </View>
-          ) : null}
         </View>
+
+        {variants ? (
+          <PaymentChoice
+            value={paidWith}
+            onChange={setPaidWith}
+            totals={{ card: variants.card?.printedTotal, cash: variants.cash?.printedTotal }}
+          />
+        ) : null}
 
         <View className="gap-2">
           <View className="flex-row items-center justify-between">
-            <SectionTitle>Items</SectionTitle>
+            <View className="flex-1 flex-row items-center gap-2">
+              <SectionTitle>Items</SectionTitle>
+              {lowLeft > 0 ? (
+                <View
+                  accessible
+                  accessibilityLabel={lowLeft === 1 ? '1 item to check' : `${lowLeft} items to check`}
+                  className="rounded-pill bg-accent px-2 py-0.5"
+                >
+                  <Text className="font-brico-extrabold text-meta text-on-accent">{`${lowLeft} to check`}</Text>
+                </View>
+              ) : null}
+            </View>
             <Money amount={sumLineTotals(working.items)} variant="item" />
           </View>
           {rows.map((r) => (
@@ -277,6 +305,7 @@ function ReviewBody({
                   <Text className="font-brico-semibold text-meta text-muted">
                     {CHARGE_WORD[c.kind]}
                     {c.rateBp !== undefined ? `, ${formatBp(c.rateBp)}%` : ''}
+                    {c.informational ? ', already in the prices' : ''}
                   </Text>
                 </View>
                 <Money amount={toPaisa(c.amount)} variant="item" />

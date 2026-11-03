@@ -14,6 +14,8 @@ import { announce } from '../lib/a11y';
 import { deleteCacheFile } from '../lib/receipt-files';
 import { formatBillDate } from '../lib/format-date';
 import { Button, ModalSheet, TextField } from '../components/ui';
+import { ScanHelpSection } from '../components/settings/ScanHelpSection';
+import { UpdatesSection } from '../components/settings/UpdatesSection';
 
 type Status = { kind: 'ok' | 'error'; text: string } | null;
 type Mode = 'merge' | 'replace';
@@ -228,11 +230,15 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          <UpdatesSection />
+
+          <ScanHelpSection />
+
           <View className="gap-1">
             <View className="flex-row items-center gap-2">
               <Lock size={sizes.icon.sm} color={colors.muted} strokeWidth={sizes.icon.strokeWidth} />
               <Text className="flex-1 font-brico-semibold text-meta text-muted">
-                Splitr works entirely on your phone. Your bills, friends' names and card labels (never card numbers) are stored only on this device, and receipts are read by on-device text recognition. No accounts, no analytics, no ads, no tracking — the app has no servers. Nothing leaves your phone unless you share a bill or a backup yourself. Deleting the app erases everything; keep a backup if you want to move phones.
+                Splitr works entirely on your phone. Your bills, friends' names and card labels (never card numbers) are stored only on this device, and receipts are read by on-device text recognition. No accounts, no analytics, no ads, no tracking — the app has no servers. Nothing leaves your phone unless you share a bill or a backup yourself. Splitr checks GitHub for new versions at most once a day; nothing about you is sent. You can turn this off. Deleting the app erases everything; keep a backup if you want to move phones.
               </Text>
             </View>
             <Text accessibilityLabel={`Version ${version}`} className="font-brico-semibold text-meta text-muted">

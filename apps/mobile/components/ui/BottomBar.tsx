@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Clock, House, Tag, Users, type LucideIcon } from 'lucide-react-native';
+import { Clock, House, ScanLine, Tag, Users, type LucideIcon } from 'lucide-react-native';
 import { sizes } from '@splitr/design-tokens';
 import { useTheme } from '../../theme';
+import * as Haptics from 'expo-haptics';
 import { Button } from './Button';
 
 export type TabKey = 'home' | 'crews' | 'deals' | 'history';
@@ -25,22 +26,47 @@ interface BottomBarProps {
   activeKey: TabKey;
   onChange: (key: TabKey) => void;
   tabs?: readonly TabItem[];
+  /** When set, a centre Scan button (ink circle) sits between the tabs. */
+  onScan?: () => void;
   /** Optional sticky action (see StickyAction) rendered above the tabs. */
   action?: ReactNode;
 }
 
-export function BottomBar({ activeKey, onChange, tabs = DEFAULT_TABS, action }: BottomBarProps) {
+export function BottomBar({ activeKey, onChange, tabs = DEFAULT_TABS, action, onScan }: BottomBarProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+
+  const scanButton = (
+    <View key="scan" className="justify-end px-2 pb-2">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Scan a receipt"
+        onPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          onScan?.();
+        }}
+        style={{ minHeight: sizes.minTouch, minWidth: sizes.minTouch }}
+        className="items-center gap-1 active:opacity-pressed"
+      >
+        <View
+          style={{ width: sizes.buttonHeight.lg, height: sizes.buttonHeight.lg }}
+          className="items-center justify-center rounded-pill bg-ink"
+        >
+          <ScanLine size={sizes.icon.lg} color={colors.bg} strokeWidth={sizes.icon.strokeWidth} />
+        </View>
+        <Text className="font-brico-extrabold text-meta text-ink">Scan</Text>
+      </Pressable>
+    </View>
+  );
 
   return (
     <View className="border-t border-chip bg-bg" style={{ paddingBottom: insets.bottom }}>
       {action}
       <View accessibilityRole="tablist" className="flex-row">
-        {tabs.map((t) => {
+        {tabs.flatMap((t, idx) => {
           const active = t.key === activeKey;
           const TabIcon = t.icon;
-          return (
+          const tab = (
             <Pressable
               key={t.key}
               accessibilityRole="tab"
@@ -48,7 +74,7 @@ export function BottomBar({ activeKey, onChange, tabs = DEFAULT_TABS, action }: 
               accessibilityState={{ selected: active }}
               onPress={() => onChange(t.key)}
               style={{ minHeight: sizes.minTouch }}
-              className="flex-1 items-center justify-center gap-1 pb-2 active:opacity-pressed"
+              className="flex-1 items-center justify-end gap-1 pb-2 active:opacity-pressed"
             >
               {/* Active indicator: a bar above the icon (shape + weight, not colour alone). */}
               <View
@@ -67,6 +93,7 @@ export function BottomBar({ activeKey, onChange, tabs = DEFAULT_TABS, action }: 
               </Text>
             </Pressable>
           );
+          return onScan && idx === Math.floor(tabs.length / 2) ? [scanButton, tab] : [tab];
         })}
       </View>
     </View>

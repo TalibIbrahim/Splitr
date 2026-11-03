@@ -6,14 +6,20 @@ import { one, row } from './layout';
 import { arbRows } from './arbitraries';
 import { parse } from './support';
 
-/** Independent recomputation of the P10 checks from the draft's OWN fields. */
+/**
+ * Independent recomputation of the P10 checks from the draft's OWN fields.
+ * P19 confirmations (docs/phase2b-spec.md 1.1): on a taxInclusive draft items-vs-subtotal is omitted and summary-vs-total
+ * uses the sum of the items; informational charges never count.
+ */
 export function expectedChecks(d: ReceiptDraft) {
+  const loose = d as unknown as { taxInclusive?: boolean; charges: { kind: string; amount: number; informational?: boolean }[] };
+  const inclusive = loose.taxInclusive === true;
   const sum = d.items.reduce((s, i) => s + i.lineTotal, 0);
-  const by = (k: string) => d.charges.filter((c) => c.kind === k).reduce((s, c) => s + c.amount, 0);
+  const by = (k: string) => loose.charges.filter((c) => c.kind === k && !c.informational).reduce((s, c) => s + c.amount, 0);
   const raw: { kind: string; expected: number; actual: number }[] = [];
-  if (d.printedSubtotal !== undefined) raw.push({ kind: 'items-vs-subtotal', expected: d.printedSubtotal, actual: sum });
+  if (d.printedSubtotal !== undefined && !inclusive) raw.push({ kind: 'items-vs-subtotal', expected: d.printedSubtotal, actual: sum });
   if (d.printedTotal !== undefined) {
-    const sub = d.printedSubtotal ?? sum;
+    const sub = inclusive ? sum : (d.printedSubtotal ?? sum);
     raw.push({
       kind: 'summary-vs-total',
       expected: d.printedTotal,
